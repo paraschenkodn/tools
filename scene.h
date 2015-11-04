@@ -82,6 +82,7 @@ private slots:
 signals:
   void setPerspectiveInfo(const QString &);
   void setFiguresInfo(const QString &);
+  void setFiguresInfo2(const QString &);
 };
 
 #endif // SCENE_H

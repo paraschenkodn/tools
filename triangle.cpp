@@ -1,6 +1,6 @@
 #include "triangle.h"
 
-Triangle::Triangle(QOpenGLShaderProgram *program, int vertexAttr, int colorAttr, int texAttr, int texUniform):
+/*Triangle::Triangle(QOpenGLShaderProgram *program, int vertexAttr, int colorAttr, int texAttr, int texUniform):
         m_program(program),
         m_vertexAttr(vertexAttr),
         m_colorAttr(colorAttr),
@@ -9,14 +9,14 @@ Triangle::Triangle(QOpenGLShaderProgram *program, int vertexAttr, int colorAttr,
         m_x0(-0.05f),
         m_y0(-0.05f),
         m_z0(0.0f),
-        m_size(0.1f)  // size triangle
+        m_size(0.25f)  // size triangle
 {
 initVertices();
 initColors();
 initTexCoords();
 // грузим текстуру
 m_texture=new QOpenGLTexture(QImage(":/Textures/rbt.png"));
-}
+}//*/
 
 Triangle::Triangle():
     m_x0(-0.05f),
@@ -124,6 +124,12 @@ void Triangle::setz0(float z)
     m_z0=z;
     // пересчитываем остальные точки (инициализируем заново вершины)
     initVertices();
+}
+
+void Triangle::setsize(float size)
+{
+  m_size=size;
+  initVertices();
 }
 
 float Triangle::getx0()

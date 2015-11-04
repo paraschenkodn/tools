@@ -29,9 +29,12 @@ public:
     float m_y0;
     float m_z0;
     float m_dist; // дистанция между шарами
+    float radius;
     void setx0(float x);
     void sety0(float y);
     void setz0(float z);
+    void setdist(float dist);
+    void setR(float R);
     QString getFigureInfo();
 
 private:

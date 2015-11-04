@@ -19,7 +19,8 @@ shphere::shphere():
     m_x0(-0.05f),
     m_y0(-0.05f),
     m_z0(0.0f),
-    m_dist(0.1f)  // distations beatween shpheres
+    m_dist(0.1f),  // distations beatween shpheres
+    radius(0.01f)
 {
     // инициализируем шейдеры
     QOpenGLShader vShader(QOpenGLShader::Vertex);
@@ -74,8 +75,7 @@ void shphere::draw()
       //m_program->setAttributeArray(m_texAttr, m_texcoords.data(), 2);
       //m_program->setUniformValue(m_texAttr,0);
 
-      //m_program->setAttributeValue("R",R); // пока используем статичный радиус
-      m_program->setUniformValue("R",0.01f); // пока используем статичный радиус
+      m_program->setUniformValue("R",radius);
 
       // активируем массивы цветов
       m_program->enableAttributeArray(m_vertexAttr);
@@ -83,7 +83,7 @@ void shphere::draw()
       //m_program->enableAttributeArray(m_texAttr);
       //qDebug() << m_program.log();
 
-      // получаем текущий viewport (как будет решаться вопрос с поворотом???)
+      // получаем текущий viewport
       float viewport2[4];
       glGetFloatv(GL_VIEWPORT, viewport2);  //получаем размеры окна рисования (x0,y0,w,h)
       //glUniform4fv(m_program.programId(),1,viewport2);
@@ -182,15 +182,19 @@ void shphere::setx0(float x)
 void shphere::sety0(float y)
 {
     m_y0=y;
-    // пересчитываем остальные точки (инициализируем заново вершины)
     initVertices();
 }
 
 void shphere::setz0(float z)
 {
     m_z0=z;
-    // пересчитываем остальные точки (инициализируем заново вершины)
     initVertices();
+}
+
+void shphere::setdist(float dist)
+{
+  m_dist=dist;
+  initVertices();
 }
 
 QString shphere::getFigureInfo()
@@ -198,4 +202,3 @@ QString shphere::getFigureInfo()
     QString text="Стартовая точка Шферы: x="+QString().setNum(m_x0)+","+QString().setNum(m_y0)+","+QString().setNum(m_z0);
     return text;  // так как переменная уничтожается после выхода из функции, надо использовать спецификатор const
 }
-

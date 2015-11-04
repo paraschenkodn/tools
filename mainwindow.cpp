@@ -11,6 +11,7 @@ MainWindow::MainWindow(QWidget *parent) :
   connect(ui->action_2,SIGNAL(changed()),ui->SceneWidget,SLOT(setPerspective()));
   connect(ui->SceneWidget,SIGNAL(setPerspectiveInfo(QString)),ui->label,SLOT(setText(QString)));
   connect(ui->SceneWidget,SIGNAL(setFiguresInfo(QString)),ui->label_2,SLOT(setText(QString)));
+  connect(ui->SceneWidget,SIGNAL(setFiguresInfo2(QString)),ui->label_4,SLOT(setText(QString)));
 }
 
 MainWindow::~MainWindow()

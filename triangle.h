@@ -8,8 +8,8 @@
 class Triangle
 {
 public:
-    Triangle(QOpenGLShaderProgram *program,
-             int vertexAttr, int colorAttr, int texAttr, int texUniform);
+    //Triangle(QOpenGLShaderProgram *program,
+      //       int vertexAttr, int colorAttr, int texAttr, int texUniform);
     Triangle();
 
     ~Triangle();
@@ -24,6 +24,7 @@ public:
     void setx0(float x);
     void sety0(float y);
     void setz0(float z);
+    void setsize(float size);
 
     float getx0();
     float gety0();

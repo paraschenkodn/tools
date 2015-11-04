@@ -27,7 +27,7 @@ Scene::Scene(QWidget *parent) :
   cameraEye=QVector3D(0.0f,0.0f,0.5f);
   cameraCenter=QVector3D(0.0f,0.0f,-0.5f);
   cameraUp=QVector3D(0.0f,1.0f,0.0f);
-  cameraFocusAngle=17;
+  cameraFocusAngle=90;                // устанавливаем начальный угол проекции
 }
 
 Scene::~Scene()
@@ -250,6 +250,22 @@ void Scene::keyPressEvent(QKeyEvent *event)
       m_triangle->setz0(m_triangle->m_z0+step); // + к нам
       m_shphere->setz0(m_shphere->m_z0+step);
     break;
+    case Qt::Key_M:
+        m_shphere->radius=m_shphere->radius+0.01;
+        m_triangle->setx0(m_triangle->m_x0-0.01); // +
+        m_triangle->setsize(m_triangle->m_size+0.02); // +
+        m_shphere->setx0(m_shphere->m_x0-0.01);
+        m_shphere->setdist(m_shphere->m_dist+0.02);
+      break;
+    case Qt::Key_N:
+      if (m_shphere->radius>=0.01f) {
+          m_shphere->radius=m_shphere->radius-0.01f;
+          m_triangle->setx0(m_triangle->m_x0+0.01); // -
+          m_triangle->setsize(m_triangle->m_size-0.02); // -
+          m_shphere->setx0(m_shphere->m_x0+0.01);
+          m_shphere->setdist(m_shphere->m_dist-0.02);
+        }
+      break;
   case Qt::Key_A:
         --m_angle;
         if (m_angle<0) m_angle=359;
@@ -320,8 +336,10 @@ void Scene::setCameraInfo()
 
 void Scene::setFigureInfo()
 {
-    QString text=m_triangle->getFigureInfo()+", "+m_shphere->getFigureInfo();
+    QString text=m_triangle->getFigureInfo()+", "+m_shphere->getFigureInfo()+", Угол поворота="+QString().setNum(m_angle)+"°";
     emit setFiguresInfo(text);
+    text="M, N - изменение фигуры. Radius="+QString().setNum(m_shphere->radius);
+    emit setFiguresInfo2(text);
 }
 
 void Scene::slotAnimation()
