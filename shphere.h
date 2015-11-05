@@ -34,7 +34,6 @@ public:
     void sety0(float y);
     void setz0(float z);
     void setdist(float dist);
-    void setR(float R);
     QString getFigureInfo();
 
 private:

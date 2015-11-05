@@ -44,8 +44,10 @@ shphere::shphere():
     //setOrthogonal(); // инициализируем на всякий случай, переопределяется в Scene::initializeGL()
 
     //добавляем шейдеры в программу для перспективной проеции
-    vShader.compileSourceFile(":/Shaders/vShphereProection.glsl");
-    fShader.compileSourceFile(":/Shaders/fShphereProection.glsl");
+    vShader.compileSourceFile(":/Shaders/vShphereOrtoPro.glsl");
+    fShader.compileSourceFile(":/Shaders/fShphereOrtoPro.glsl");
+    //vShader.compileSourceFile(":/Shaders/vShphereProection.glsl");
+    //fShader.compileSourceFile(":/Shaders/fShphereProection.glsl");
     m_programP.addShader(&vShader);
     m_programP.addShader(&fShader);
     if (!m_programP.link()){
@@ -53,7 +55,6 @@ shphere::shphere():
         return;
     }
     //setPerspective();//*/ // инициализируем на всякий случай, переопределяется в Scene::initializeGL()
-
     initVertices();
     initColors();
 }

@@ -56,7 +56,7 @@ void main() {
             2.0/float(viewport.z), 0.0, 0.0, 0.0,
             0.0, 2.0/float(viewport.w), 0.0, 0.0,
             0.0, 0.0,                   2.0/gl_DepthRange.diff, 0.0,
-            -float(viewport.z+2.0*viewport.x)/float(viewport.z), -float(viewport.w+2.0*viewport.y)/float(viewport.w), -(gl_DepthRange.near+gl_DepthRange.far)/gl_DepthRange.diff, 1.0);
+            -(float(viewport.z)+2.0*float(viewport.x))/float(viewport.z), -(float(viewport.w)+2.0*float(viewport.y))/float(viewport.w), -(gl_DepthRange.near+gl_DepthRange.far)/gl_DepthRange.diff, 1.0);
     VPInverse = PMi*VInverse; // TODO: move to CPU
     //VPInverse = gl_ProjectionMatrixInverse*VInverse; // TODO: move to CPU
 
