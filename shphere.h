@@ -30,6 +30,7 @@ public:
     float m_z0;
     float m_dist; // дистанция между шарами
     float radius;
+    float maxpointsize;
     void setx0(float x);
     void sety0(float y);
     void setz0(float z);

@@ -4,6 +4,7 @@ uniform mediump mat4 MVPM;
 attribute lowp vec4 colorAttr;
 //attribute float R; // В картах ATI "левые" переменные для вычислений принимаются только через uniform
 uniform float R;
+uniform float maxpointsize;
 uniform vec4 viewport; //получаем размеры окна рисования (x0,y0,w,h)
 
 // for orto proection

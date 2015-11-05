@@ -3,6 +3,7 @@ attribute highp vec4 vertexAttr;
 uniform mediump mat4 MVPM;  // gl_ModelViewProjectionMatrix
 attribute lowp vec4 colorAttr;
 uniform float R;
+uniform float maxpointsize;
 uniform vec4 viewport; // //получаем размеры окна рисования (x0,y0,w,h)
 
 // for perspective proection
@@ -47,34 +48,11 @@ color = colorAttr;
     float discriminant_y = r2Dr4T*r2Dr4T-r4Dr4T*r2Dr2T;
     float screen = max(float(viewport.z), float(viewport.w));
 
-    gl_PointSize = sqrt(max(discriminant_x, discriminant_y))*screen/(-r4Dr4T);
-    gl_PointSize = viewport.w;
-
-    // prepare varyings
-
-    mat4 TInverse = mat4(
-            1.0,          0.0,          0.0,         0.0,
-            0.0,          1.0,          0.0,         0.0,
-            0.0,          0.0,          1.0,         0.0,
-            -vertexAttr.x, -vertexAttr.y, -vertexAttr.z, R);
-    mat4 VInverse = mat4( // TODO: move this one to CPU
-            2.0/float(viewport.z), 0.0, 0.0, 0.0,
-            0.0, 2.0/float(viewport.w), 0.0, 0.0,
-            0.0, 0.0,                   2.0/gl_DepthRange.diff, 0.0,
-            -float(viewport.z+2.0*viewport.x)/float(viewport.z), -float(viewport.w+2.0*viewport.y)/float(viewport.w), -(gl_DepthRange.near+gl_DepthRange.far)/gl_DepthRange.diff, 1.0);
-
-    VPMTInverse = TInverse*gl_ModelViewProjectionMatrixInverse*VInverse; // gl_ModelViewProjectionMatrixInverse отменяет преобразование вида
-    //VPMTInverse = TInverse*viewport*VInverse;
-
-    VPInverse = gl_ProjectionMatrixInverse*VInverse; // TODO: move to CPU
-    //VPInverse = viewport*VInverse; // TODO: move to CPU
-
-    vec4 centerclip = gl_ModelViewMatrix*vertexAttr;
-    //vec4 centerclip = viewport*vertexAttr;
-    centernormclip = vec3(centerclip)/centerclip.w;
+    //gl_PointSize = sqrt(max(discriminant_x, discriminant_y))*screen/(-r4Dr4T);
+    gl_PointSize = viewport.w*2;
 
     // temp of костыль
-    radius=gl_PointSize;
+    radius=viewport.w;//gl_PointSize;
     center=gl_Position.xyz;
     position=gl_Position;
 }

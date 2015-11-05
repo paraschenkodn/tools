@@ -44,10 +44,10 @@ shphere::shphere():
     //setOrthogonal(); // инициализируем на всякий случай, переопределяется в Scene::initializeGL()
 
     //добавляем шейдеры в программу для перспективной проеции
-    vShader.compileSourceFile(":/Shaders/vShphereOrtoPro.glsl");
-    fShader.compileSourceFile(":/Shaders/fShphereOrtoPro.glsl");
-    //vShader.compileSourceFile(":/Shaders/vShphereProection.glsl");
-    //fShader.compileSourceFile(":/Shaders/fShphereProection.glsl");
+    //vShader.compileSourceFile(":/Shaders/vShphereOrtoPro.glsl");
+    //fShader.compileSourceFile(":/Shaders/fShphereOrtoPro.glsl");
+    vShader.compileSourceFile(":/Shaders/vShphereProection.glsl");
+    fShader.compileSourceFile(":/Shaders/fShphereProection.glsl");
     m_programP.addShader(&vShader);
     m_programP.addShader(&fShader);
     if (!m_programP.link()){
@@ -57,6 +57,7 @@ shphere::shphere():
     //setPerspective();//*/ // инициализируем на всякий случай, переопределяется в Scene::initializeGL()
     initVertices();
     initColors();
+    glGet
 }
 
 void shphere::init()
@@ -77,6 +78,7 @@ void shphere::draw()
       //m_program->setUniformValue(m_texAttr,0);
 
       m_program->setUniformValue("R",radius);
+      m_program->setUniformValue("maxpointsize",maxpointsize);
 
       // активируем массивы цветов
       m_program->enableAttributeArray(m_vertexAttr);
