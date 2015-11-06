@@ -17,13 +17,15 @@ SOURCES += main.cpp\
     scene.cpp \
     triangle.cpp \
     pointsofsphere.cpp \
-    shphere.cpp
+    shphere.cpp \
+    text.cpp
 
 HEADERS  += mainwindow.h \
     scene.h \
     triangle.h \
     pointsofsphere.h \
-    shphere.h
+    shphere.h \
+    text.h
 
 FORMS    += mainwindow.ui
 

@@ -42,6 +42,14 @@ void main() {
     float screen = max(float(viewport.z), float(viewport.w));
 
     gl_PointSize = sqrt(max(discriminant_x, discriminant_y))*screen/(-r4Dr4T);
+
+    // защита роста сферы от системных ограничений
+    float newR=R;
+    if (gl_PointSize>maxpointsize)
+        {
+        float factor = maxpointsize/gl_PointSize;
+        newR=R*factor;
+    }
     //gl_PointSize = viewport.w;
 
     // prepare varyings
@@ -51,7 +59,7 @@ void main() {
             1.0,          0.0,          0.0,         0.0,
             0.0,          1.0,          0.0,         0.0,
             0.0,          0.0,          1.0,         0.0,
-            -vertexAttr.x, -vertexAttr.y, -vertexAttr.z, R);
+            -vertexAttr.x, -vertexAttr.y, -vertexAttr.z, newR);
 
     mat4 VInverse = mat4( // TODO: move this one to CPU // лишний код который вычисляется на раз в сцене (не надо его считать для каждой вершины)
             2.0/float(viewport.z), 0.0, 0.0, 0.0,

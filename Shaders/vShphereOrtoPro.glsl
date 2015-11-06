@@ -48,11 +48,19 @@ color = colorAttr;
     float discriminant_y = r2Dr4T*r2Dr4T-r4Dr4T*r2Dr2T;
     float screen = max(float(viewport.z), float(viewport.w));
 
-    //gl_PointSize = sqrt(max(discriminant_x, discriminant_y))*screen/(-r4Dr4T);
-    gl_PointSize = viewport.w*2;
+    gl_PointSize = sqrt(max(discriminant_x, discriminant_y))*screen/(-r4Dr4T);
+    //gl_PointSize = viewport.w*2;
+
+    // защита роста сферы от системных ограничений
+    float newR=R;
+    if (gl_PointSize>maxpointsize)
+        {
+        float factor = maxpointsize/gl_PointSize;
+        newR=R*factor;
+    }
 
     // temp of костыль
-    radius=viewport.w;//gl_PointSize;
+    radius=gl_PointSize/2;
     center=gl_Position.xyz;
     position=gl_Position;
 }

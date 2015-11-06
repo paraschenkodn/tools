@@ -1,6 +1,5 @@
 #include "shphere.h"
 /// класс рисования сферы с помощью шейдера
-/// пока только в перспективной проекции (?)
 ///
 
 /*// получение лога ошибок компиляции шейдеров
@@ -44,10 +43,10 @@ shphere::shphere():
     //setOrthogonal(); // инициализируем на всякий случай, переопределяется в Scene::initializeGL()
 
     //добавляем шейдеры в программу для перспективной проеции
-    //vShader.compileSourceFile(":/Shaders/vShphereOrtoPro.glsl");
-    //fShader.compileSourceFile(":/Shaders/fShphereOrtoPro.glsl");
-    vShader.compileSourceFile(":/Shaders/vShphereProection.glsl");
-    fShader.compileSourceFile(":/Shaders/fShphereProection.glsl");
+    vShader.compileSourceFile(":/Shaders/vShphereOrtoPro.glsl");
+    fShader.compileSourceFile(":/Shaders/fShphereOrtoPro.glsl");
+    //vShader.compileSourceFile(":/Shaders/vShphereProection.glsl");
+    //fShader.compileSourceFile(":/Shaders/fShphereProection.glsl");
     m_programP.addShader(&vShader);
     m_programP.addShader(&fShader);
     if (!m_programP.link()){
@@ -57,7 +56,12 @@ shphere::shphere():
     //setPerspective();//*/ // инициализируем на всякий случай, переопределяется в Scene::initializeGL()
     initVertices();
     initColors();
-    glGet
+
+    //вычисляем maxpointsize для видеокарты
+    glDisable(GL_POINT_SMOOTH);
+    float params[2];
+        glGetFloatv(GL_POINT_SIZE_RANGE,params);  // это нигде не работает для несглаживаемых точек
+    maxpointsize=300; //params[1];
 }
 
 void shphere::init()
@@ -85,13 +89,6 @@ void shphere::draw()
       m_program->enableAttributeArray(m_colorAttr);
       //m_program->enableAttributeArray(m_texAttr);
       //qDebug() << m_program.log();
-
-      // получаем текущий viewport
-      float viewport2[4];
-      glGetFloatv(GL_VIEWPORT, viewport2);  //получаем размеры окна рисования (x0,y0,w,h)
-      //glUniform4fv(m_program.programId(),1,viewport2);
-      QVector4D viewport(viewport2[0],viewport2[1],viewport2[2],viewport2[3]);
-      ///m_program->setUniformValue("viewport",viewport);
 
       // рисуем точки
       glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);   // говорим что будут меняться размеры точек в шейдере

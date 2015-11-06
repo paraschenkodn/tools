@@ -137,7 +137,7 @@ void Scene::paintGL(){
     //РИСУЕМ СФЕРЫ
     m_shphere->init();
     m_shphere->m_program->setUniformValue(m_shphere->m_matrixUniform, MVPM);
-    m_shphere->m_program->setUniformValue("PMi", PMi);
+    m_shphere->m_program->setUniformValue("PMi", PMi);                          // TODO вынести в класс шфер
     m_shphere->m_program->setUniformValue("MVM", MVM);
     m_shphere->m_program->setUniformValue("MVPMi", MVPMi);
     m_shphere->m_program->setUniformValue("viewport",viewport);
@@ -251,19 +251,19 @@ void Scene::keyPressEvent(QKeyEvent *event)
       m_shphere->setz0(m_shphere->m_z0+step);
     break;
     case Qt::Key_M:
-        m_shphere->radius=m_shphere->radius+0.01;
-        m_triangle->setx0(m_triangle->m_x0-0.01); // +
-        m_triangle->setsize(m_triangle->m_size+0.02); // +
-        m_shphere->setx0(m_shphere->m_x0-0.01);
-        m_shphere->setdist(m_shphere->m_dist+0.02);
+        m_shphere->radius=m_shphere->radius+0.001;
+        m_triangle->setx0(m_triangle->m_x0-0.001); // +
+        m_triangle->setsize(m_triangle->m_size+0.002); // +
+        m_shphere->setx0(m_shphere->m_x0-0.001);
+        m_shphere->setdist(m_shphere->m_dist+0.002);
       break;
     case Qt::Key_N:
-      if (m_shphere->radius>=0.01f) {
-          m_shphere->radius=m_shphere->radius-0.01f;
-          m_triangle->setx0(m_triangle->m_x0+0.01); // -
-          m_triangle->setsize(m_triangle->m_size-0.02); // -
-          m_shphere->setx0(m_shphere->m_x0+0.01);
-          m_shphere->setdist(m_shphere->m_dist-0.02);
+      if (m_shphere->radius>=0.001f) {
+          m_shphere->radius=m_shphere->radius-0.001f;
+          m_triangle->setx0(m_triangle->m_x0+0.001); // -
+          m_triangle->setsize(m_triangle->m_size-0.002); // -
+          m_shphere->setx0(m_shphere->m_x0+0.001);
+          m_shphere->setdist(m_shphere->m_dist-0.002);
         }
       break;
   case Qt::Key_A:
