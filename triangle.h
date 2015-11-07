@@ -39,17 +39,17 @@ public:
 
     QOpenGLShaderProgram m_program;
 
-
     int m_vertexAttr;
     int m_colorAttr;
     int m_texAttr;
     int m_texUniform;
     int m_matrixUniform;
 
-private:
     std::vector<float> m_vertices; //создаём вектор (контейнер хранения) координат вершин
     std::vector<float> m_colors; //создаём вектор (контейнер хранения) координат цветов
     std::vector<float> m_texcoords;
+
+private:
     void initVertices();   // инициализация вектора вершин
     void initColors();      // инициализация вектора цветов
     void initTexCoords();  // инициализация текстурных координат

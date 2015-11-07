@@ -3,11 +3,11 @@ uniform float R;    // "левые" переменные на картах ATI �
 uniform float maxpointsize; // системная величина, зависит от карты
 attribute highp vec4 vertexAttr; //
 attribute lowp vec4 colorAttr;  //
-uniform mediump mat4 MVPM;  // gl_ModelViewProjectionMatrix
-uniform mediump mat4 MVM;  // gl_ModelViewMatrix
-uniform mediump mat4 MVPMi; //gl_ModelViewProjectionMatrixInverse
-uniform mediump mat4 PMi;  // gl_ProjectionMatrixInverse
-uniform mediump mat4 MVMi;  // gl_ModelViewMatrixInverse
+uniform highp mat4 MVPM;  // gl_ModelViewProjectionMatrix
+uniform highp mat4 MVM;  // gl_ModelViewMatrix
+uniform highp mat4 MVPMi; //gl_ModelViewProjectionMatrixInverse
+uniform highp mat4 PMi;  // gl_ProjectionMatrixInverse
+uniform highp mat4 MVMi;  // gl_ModelViewMatrixInverse
 
 varying mat4 VPMTInverse;
 varying mat4 VPInverse;
@@ -17,13 +17,13 @@ void main() {
     gl_Position = MVPM * vertexAttr; // В шейдерную программу матрицу нужно передавать как есть, а в шейдере производить умножение не вектора на матрицу, а матрицы на вектор.
     gl_FrontColor = colorAttr; //
 
-    mat4 T = mat4(
+    highp mat4 T = mat4(
             1.0, 0.0, 0.0, 0.0,
             0.0, 1.0, 0.0, 0.0,
             0.0, 0.0, 1.0, 0.0,
             vertexAttr.x/R, vertexAttr.y/R, vertexAttr.z/R, 1.0/R);
 
-    mat4 PMTt = transpose(MVPM * T);  // (Project Model Transpose T)
+    highp mat4 PMTt = transpose(MVPM * T);  // (Project Model Transpose T)
 
     vec4 r1 = PMTt[0];
     vec4 r2 = PMTt[1];
@@ -55,13 +55,13 @@ void main() {
     // prepare varyings
 
     // перенос в локальное пространство координат шара-точки
-    mat4 TInverse = mat4(
+    highp mat4 TInverse = mat4(
             1.0,          0.0,          0.0,         0.0,
             0.0,          1.0,          0.0,         0.0,
             0.0,          0.0,          1.0,         0.0,
             -vertexAttr.x, -vertexAttr.y, -vertexAttr.z, newR);
 
-    mat4 VInverse = mat4( // TODO: move this one to CPU // лишний код который вычисляется на раз в сцене (не надо его считать для каждой вершины)
+    highp mat4 VInverse = mat4( // TODO: move this one to CPU // лишний код который вычисляется на раз в сцене (не надо его считать для каждой вершины)
             2.0/float(viewport.z), 0.0, 0.0, 0.0,
             0.0, 2.0/float(viewport.w), 0.0, 0.0,
             0.0, 0.0,                   2.0/gl_DepthRange.diff, 0.0,

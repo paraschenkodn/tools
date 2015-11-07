@@ -5,6 +5,7 @@
 #include "triangle.h"
 #include "pointsofsphere.h"
 #include "shphere.h"
+#include "text.h"
 #include <QOpenGLShaderProgram>
 #include <QKeyEvent>
 #include <QTimer>
@@ -53,6 +54,8 @@ private:
   //QVector<QOpenGLShaderProgram *> m_program;
   shphere *m_shphere;
   pointsofsphere *spherepoints;
+  Text *m_text;
+
   void setFigureInfo(); // формируем и посылаем текст для отображения параметров в главном окне
 
   // создаём идентификаторы для обращения к шейдерным переменным

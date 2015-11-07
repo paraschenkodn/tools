@@ -1,23 +1,5 @@
 #include "triangle.h"
 
-/*Triangle::Triangle(QOpenGLShaderProgram *program, int vertexAttr, int colorAttr, int texAttr, int texUniform):
-        m_program(program),
-        m_vertexAttr(vertexAttr),
-        m_colorAttr(colorAttr),
-        m_texAttr(texAttr),
-        m_texUniform(texUniform),
-        m_x0(-0.05f),
-        m_y0(-0.05f),
-        m_z0(0.0f),
-        m_size(0.25f)  // size triangle
-{
-initVertices();
-initColors();
-initTexCoords();
-// грузим текстуру
-m_texture=new QOpenGLTexture(QImage(":/Textures/rbt.png"));
-}//*/
-
 Triangle::Triangle():
     m_x0(-0.05f),
     m_y0(-0.05f),
@@ -82,7 +64,7 @@ void Triangle::draw()   // draw(*allcoords); // vertex, color, textures
     m_program.setAttributeArray(m_vertexAttr, m_vertices.data(), 3);
     m_program.setAttributeArray(m_colorAttr, m_colors.data(), 3);
     m_program.setAttributeArray(m_texAttr, m_texcoords.data(), 2);
-    m_program.setUniformValue(m_texAttr,0);
+    m_program.setUniformValue(m_texUniform,0);
 
     // активируем массивы
     m_program.enableAttributeArray(m_vertexAttr);
@@ -102,7 +84,6 @@ void Triangle::drop()
 {
     // очищаем программу
     m_program.release();
-
 }
 
 void Triangle::setx0(float x)

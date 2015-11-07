@@ -31,8 +31,6 @@ shphere::shphere():
     //добавляем шейдеры в программу для ортогональной проекции
     vShader.compileSourceFile(":/Shaders/vShphereOrto.glsl");
     fShader.compileSourceFile(":/Shaders/fShphereOrto.glsl");
-    //vShader.compileSourceFile(":/Shaders/vShader.glsl");
-    //fShader.compileSourceFile(":/Shaders/fShader.glsl");
     m_programO.addShader(&vShader);
     m_programO.addShader(&fShader);
     // линкуем загруженные в программу шейдеры вместе и проверяем
@@ -43,10 +41,10 @@ shphere::shphere():
     //setOrthogonal(); // инициализируем на всякий случай, переопределяется в Scene::initializeGL()
 
     //добавляем шейдеры в программу для перспективной проеции
-    vShader.compileSourceFile(":/Shaders/vShphereOrtoPro.glsl");
-    fShader.compileSourceFile(":/Shaders/fShphereOrtoPro.glsl");
-    //vShader.compileSourceFile(":/Shaders/vShphereProection.glsl");
-    //fShader.compileSourceFile(":/Shaders/fShphereProection.glsl");
+    //vShader.compileSourceFile(":/Shaders/vShphereOrtoPro.glsl");
+    //fShader.compileSourceFile(":/Shaders/fShphereOrtoPro.glsl");
+    vShader.compileSourceFile(":/Shaders/vShphereProection.glsl");
+    fShader.compileSourceFile(":/Shaders/fShphereProection.glsl");
     m_programP.addShader(&vShader);
     m_programP.addShader(&fShader);
     if (!m_programP.link()){
