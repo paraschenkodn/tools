@@ -35,6 +35,7 @@ public:
     int m_texUniform;
     int m_MVPmatrix;
 
+    QOpenGLTexture *m_texture;
 };
 
 #endif // TEXT_H

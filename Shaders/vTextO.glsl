@@ -6,7 +6,7 @@ attribute highp vec2 texAttr;  // // входной аттрибут для ко
 varying highp vec2 texCoord;  // общая переменная для вершин (выходной параметр)
 
 void main () {
-    gl_Position = vertexAttr; // устанавливаем позицию вершин через матрицу
+    gl_Position = MVPM*vertexAttr; // устанавливаем позицию вершин через матрицу
     //color = colorAttr; // и передаём цвет в фрагментный шейдер
     texCoord = texAttr; // и передаём цвет в фрагментный шейдер
 }

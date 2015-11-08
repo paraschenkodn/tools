@@ -130,7 +130,7 @@ float Triangle::getz0()
 
 QString Triangle::getFigureInfo()
 {
-    QString text="Стартовая точка треугольника: x="+QString().setNum(m_x0)+","+QString().setNum(m_y0)+","+QString().setNum(m_z0);
+    QString text="Стартовая точка треугольника: x="+QString().setNum(m_x0)+", "+QString().setNum(m_y0)+", "+QString().setNum(m_z0);
     return text;
 }
 

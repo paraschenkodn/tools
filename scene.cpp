@@ -5,7 +5,8 @@
 Scene::Scene(QWidget *parent) :
     QOpenGLWidget (parent),
     m_angle(0),
-    perspective(true)
+    perspective(true),
+    paintMode(1)
 {
   // задаём для виджета фокус, чтобы оно реагировало на кнопки
   this->setFocusPolicy(Qt::StrongFocus);
@@ -67,7 +68,7 @@ void Scene::initializeGL() {
 
     // тест - создаём простую сферу на шейдерах
     m_shphere=new shphere();
-    if (perspective)
+    if (perspective)                // инициализируем зависимости от перспективы
         m_shphere->setPerspective();
             else
     m_shphere->setOrthogonal();
@@ -80,82 +81,101 @@ void Scene::initializeGL() {
 }
 
 void Scene::paintGL(){
-    setStates();                    // включаем буфер глубины, свет и прочее (возможно можно вынести в initGL)
+    switch (paintMode){
+      case 1:
+        paintDM();
+        break;
+      case 2:
+        paintKarta();
+        break;
+      default:
+        break;
+      }
+}
 
-    //glClear(GL_COLOR_BUFFER_BIT); // если включен буфер глубины, то без его очистки мы ничего не увидим
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //glMatrixMode(GL_PROJECTION);
-    //qgluPerspective(60.0, width / height, 0.01, 15.0);
+void Scene::paintDM()
+{
+  setStates();                    // включаем буфер глубины, свет и прочее (возможно можно вынести в initGL)
 
-    //glMatrixMode(GL_MODELVIEW);
+  //glClear(GL_COLOR_BUFFER_BIT); // если включен буфер глубины, то без его очистки мы ничего не увидим
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  //glMatrixMode(GL_PROJECTION);
+  //qgluPerspective(60.0, width / height, 0.01, 15.0);
 
-    //пишем матрицы преобразований
-    QMatrix4x4 LMM; // Local Model matrix (делает преобразования в локальных координатах объекта, для одного объекта их может быть несколько для разных частей объекта)
-    QMatrix4x4 MM; // Model matrix (выносит координаты объекта в координаты пространства сцены,
-                  //выполняется в следующем порядке - масштабирование, поворот, перенос)
-                  // TranslationMatrix * RotationMatrix * ScaleMatrix * OriginalVector; (в коде это выглядит в обратном порядке)
-    QMatrix4x4 MVM; // ModelView matrix (View matrix)("масштабирует крутит и перемещает весь мир")
-    QMatrix4x4 CameraView; // тоже самое что и MVM, но для использования функции LookAt
-    QMatrix4x4 PM; // Projection matrix // проекционная матрица
-    QMatrix4x4 MVPM; // ModelViewProjection matrix (projection * view * model)
-    if (perspective) {
-        // устанавливаем трёхмерную канву (в перспективной проекции) для рисования (плоскости отсечения)
-        // угол перспективы, отношение сторон, расстояние до ближней отсекающей плоскости и дальней
-        PM.perspective(cameraFocusAngle,ratio,0.1f,100.0f);  // glFrustum( xmin, xmax, ymin, ymax, near, far)  // gluPerspective(fovy, aspect, near, far)
-    }
-    else {
-        // устанавливаем трёхмерную канву (в ортогональной проекции) для рисования (плоскости отсечения)
-        PM.ortho(-2.0f,2.0f,-2.0f,2.0f,-8.0f,8.0f); // glOrtho(left,right,bottom,top,near,far) // увеличение значений уменьшает фигуры на сцене (по Z задаём больше, чтобы не видеть отсечение фигур)
-        // переносим по z дальше, обязательное условие для перспективной проекции // по оси z 0 это "глаз", - движение камеры назад, + вперёд.
-    }
-    ///MVM.translate(0.0f,0.0f,-6.0f); // переносим по z от "глаз", сдвигаем камеру на минус, т.е. в сторону затылка.
-    // не работает в ортогональной проекции если перенести слишком далеко, за пределы куба отсечения
-    // оппа, мы видим передние границы пирамиды отсечения, где всё отсекается (тут-то шейдерным сферам и конец)
-    // изменяем масштаб фигуры (увеличиваем)
-    ///MVM.scale(10.0f);  // отрицательное число переворачивает проекцию // влияет только на ортогональную проекцию // убивает Шферы
-    // указываем угол поворота и ось поворота смотрящую из центра координат к точке x,y,z,
-    MVM.rotate(m_angle,0.0f,1.0f,0.0f);  // поворот вокруг оси центра координат
-    CameraView.lookAt(cameraEye,cameraCenter,cameraUp); // установка камеры (матрицы трансфрмации)
-    MVM=CameraView*MVM;  // получаем матрицу трансформации итогового вида
-    MVPM=PM*MVM;
+  //glMatrixMode(GL_MODELVIEW);
 
-    // находим проекционную инверсную мтрицу
-    bool inverted;
-    QMatrix4x4 PMi=PM.inverted(&inverted);
-    if (!inverted)
-        qDebug() << "PMi не конвертится";
-    QMatrix4x4 MVPMi=MVPM.inverted(&inverted);
-    if (!inverted)
-        qDebug() << "MVPMi не конвертится";
+  //пишем матрицы преобразований
+  QMatrix4x4 LMM; // Local Model matrix (делает преобразования в локальных координатах объекта, для одного объекта их может быть несколько для разных частей объекта)
+  QMatrix4x4 MM; // Model matrix (выносит координаты объекта в координаты пространства сцены,
+                //выполняется в следующем порядке - масштабирование, поворот, перенос)
+                // TranslationMatrix * RotationMatrix * ScaleMatrix * OriginalVector; (в коде это выглядит в обратном порядке)
+  QMatrix4x4 MVM; // ModelView matrix (View matrix)("масштабирует крутит и перемещает весь мир")
+  QMatrix4x4 CameraView; // тоже самое что и MVM, но для использования функции LookAt
+  QMatrix4x4 PM; // Projection matrix // проекционная матрица
+  QMatrix4x4 MVPM; // ModelViewProjection matrix (projection * view * model)
+  if (perspective) {
+      // устанавливаем трёхмерную канву (в перспективной проекции) для рисования (плоскости отсечения)
+      // угол перспективы, отношение сторон, расстояние до ближней отсекающей плоскости и дальней
+      PM.perspective(cameraFocusAngle,ratio,0.1f,100.0f);  // glFrustum( xmin, xmax, ymin, ymax, near, far)  // gluPerspective(fovy, aspect, near, far)
+  }
+  else {
+      // устанавливаем трёхмерную канву (в ортогональной проекции) для рисования (плоскости отсечения)
+      PM.ortho(-2.0f,2.0f,-2.0f,2.0f,-8.0f,8.0f); // glOrtho(left,right,bottom,top,near,far) // увеличение значений уменьшает фигуры на сцене (по Z задаём больше, чтобы не видеть отсечение фигур)
+      // переносим по z дальше, обязательное условие для перспективной проекции // по оси z 0 это "глаз", - движение камеры назад, + вперёд.
+  }
+  ///MVM.translate(0.0f,0.0f,-6.0f); // переносим по z от "глаз", сдвигаем камеру на минус, т.е. в сторону затылка.
+  // не работает в ортогональной проекции если перенести слишком далеко, за пределы куба отсечения
+  // оппа, мы видим передние границы пирамиды отсечения, где всё отсекается (тут-то шейдерным сферам и конец)
+  // изменяем масштаб фигуры (увеличиваем)
+  ///MVM.scale(10.0f);  // отрицательное число переворачивает проекцию // влияет только на ортогональную проекцию // убивает Шферы
+  // указываем угол поворота и ось поворота смотрящую из центра координат к точке x,y,z,
+  MVM.rotate(m_angle,0.0f,1.0f,0.0f);  // поворот вокруг оси центра координат
+  CameraView.lookAt(cameraEye,cameraCenter,cameraUp); // установка камеры (матрицы трансфрмации)
+  MVM=CameraView*MVM;  // получаем матрицу трансформации итогового вида
+  MVPM=PM*MVM;
 
-    // РИСУЕМ ТРЕУГОЛЬНИК
-    // инициализируем данные программы матрицы и атрибуты
-    m_triangle->init();
-    // зaпихиваем в его программу матрицу ориентации
-    m_triangle->m_program.setUniformValue(m_triangle->m_matrixUniform, MVPM);
-    // вызываем функцию рисования объекта (или объектов в for)
-    m_triangle->draw();
-    // проводим сброс инициализации параметров
-    m_triangle->drop();//*/
+  // находим проекционную инверсную мтрицу
+  bool inverted;
+  QMatrix4x4 PMi=PM.inverted(&inverted);
+  if (!inverted)
+      qDebug() << "PMi не конвертится";
+  QMatrix4x4 MVPMi=MVPM.inverted(&inverted);
+  if (!inverted)
+      qDebug() << "MVPMi не конвертится";
 
-    //РИСУЕМ СФЕРЫ
-    m_shphere->init();
-    m_shphere->m_program->setUniformValue(m_shphere->m_matrixUniform, MVPM);
-    m_shphere->m_program->setUniformValue("PMi", PMi);                          // TODO вынести в класс шфер
-    m_shphere->m_program->setUniformValue("MVM", MVM);
-    m_shphere->m_program->setUniformValue("MVPMi", MVPMi);
-    m_shphere->m_program->setUniformValue("viewport",viewport);
-    m_shphere->draw();
-    m_shphere->drop();//*/
+  // РИСУЕМ ТРЕУГОЛЬНИК
+  // инициализируем данные программы матрицы и атрибуты
+  m_triangle->init();
+  // зaпихиваем в его программу матрицу ориентации
+  m_triangle->m_program.setUniformValue(m_triangle->m_matrixUniform, MVPM);
+  // вызываем функцию рисования объекта (или объектов в for)
+  m_triangle->draw();
+  // проводим сброс инициализации параметров
+  m_triangle->drop();//*/
 
-    //РИСУЕМ ТЕКСТ
-    //m_text->font=QFont::Bold;
-    //m_text->pen=
-    m_text->init();
-    m_text->drawO(MVPM,"Точка 1",QVector3D(m_triangle->m_vertices[0],m_triangle->m_vertices[1],m_triangle->m_vertices[2]));
-    m_text->drawO(MVPM,"Точка 2",QVector3D(m_triangle->m_vertices[3],m_triangle->m_vertices[4],m_triangle->m_vertices[5]));
-    m_text->drawO(MVPM,"Точка 3",QVector3D(m_triangle->m_vertices[6],m_triangle->m_vertices[7],m_triangle->m_vertices[8]));
-    m_text->drop();
+  //РИСУЕМ СФЕРЫ
+  m_shphere->init();
+  m_shphere->m_program->setUniformValue(m_shphere->m_matrixUniform, MVPM);
+  m_shphere->m_program->setUniformValue("PMi", PMi);                          // TODO вынести в класс шфер
+  m_shphere->m_program->setUniformValue("MVM", MVM);
+  m_shphere->m_program->setUniformValue("MVPMi", MVPMi);
+  m_shphere->m_program->setUniformValue("viewport",viewport);
+  m_shphere->draw();
+  m_shphere->drop();//*/
+
+  //РИСУЕМ ТЕКСТ
+  //m_text->font=QFont::Bold;
+  //m_text->pen=
+  m_text->init();
+  m_text->drawO(MVPM,"Точка 1",QVector3D(m_triangle->m_vertices[0],m_triangle->m_vertices[1],m_triangle->m_vertices[2]));
+  m_text->drawO(MVPM,"Точка 2",QVector3D(m_triangle->m_vertices[3],m_triangle->m_vertices[4],m_triangle->m_vertices[5]));
+  m_text->drawO(MVPM,"Точка 3",QVector3D(m_triangle->m_vertices[6],m_triangle->m_vertices[7],m_triangle->m_vertices[8]));
+  m_text->drop();
+}
+
+void Scene::paintKarta()
+{
+  paintDM();
 }
 
 void Scene::resizeGL(int w, int h){
@@ -223,16 +243,15 @@ void Scene::defaultStates()
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0f);
 }
 
-void Scene::setOrthogonal()
+void Scene::setPerspective(int _switch)
 {
-    perspective=false;
-    m_shphere->setOrthogonal();
+    if (_switch==0) perspective=true;
+    else perspective=false;
 }
 
-void Scene::setPerspective()
+void Scene::setPaintMode(int mode)
 {
-    perspective=true;
-    m_shphere->setPerspective();
+  paintMode=mode;
 }
 
 void Scene::keyPressEvent(QKeyEvent *event)
@@ -265,17 +284,17 @@ void Scene::keyPressEvent(QKeyEvent *event)
     case Qt::Key_M:
         m_shphere->radius=m_shphere->radius+0.001;
         m_triangle->setx0(m_triangle->m_x0-0.001); // +
-        m_triangle->setsize(m_triangle->m_size+0.002); // +
+        m_triangle->setsize(m_triangle->m_size+0.004); // +
         m_shphere->setx0(m_shphere->m_x0-0.001);
-        m_shphere->setdist(m_shphere->m_dist+0.002);
+        m_shphere->setdist(m_shphere->m_dist+0.004);
       break;
     case Qt::Key_N:
       if (m_shphere->radius>=0.001f) {
           m_shphere->radius=m_shphere->radius-0.001f;
           m_triangle->setx0(m_triangle->m_x0+0.001); // -
-          m_triangle->setsize(m_triangle->m_size-0.002); // -
+          m_triangle->setsize(m_triangle->m_size-0.004); // -
           m_shphere->setx0(m_shphere->m_x0+0.001);
-          m_shphere->setdist(m_shphere->m_dist-0.002);
+          m_shphere->setdist(m_shphere->m_dist-0.004);
         }
       break;
   case Qt::Key_A:
@@ -340,9 +359,9 @@ setCameraInfo();
 void Scene::setCameraInfo()
 {
     QString text="I,O,P - изменение проекции. Фокусный угол="+QString().setNum(cameraFocusAngle);
-    text=text+" cameraEye="+QString().setNum(cameraEye[0])+","+QString().setNum(cameraEye[1])+","+QString().setNum(cameraEye[2])
-            +", cameraCenter="+QString().setNum(cameraCenter[0])+","+QString().setNum(cameraCenter[1])+","+QString().setNum(cameraCenter[2])
-            +" cameraUp="+QString().setNum(cameraUp[0])+","+QString().setNum(cameraUp[1])+","+QString().setNum(cameraUp[2]);
+    text=text+" cameraEye="+QString().setNum(cameraEye[0])+", "+QString().setNum(cameraEye[1])+", "+QString().setNum(cameraEye[2])
+            +", cameraCenter="+QString().setNum(cameraCenter[0])+", "+QString().setNum(cameraCenter[1])+", "+QString().setNum(cameraCenter[2])
+            +" cameraUp="+QString().setNum(cameraUp[0])+", "+QString().setNum(cameraUp[1])+", "+QString().setNum(cameraUp[2]);
     emit setPerspectiveInfo(text);
 }
 

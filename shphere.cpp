@@ -197,6 +197,6 @@ void shphere::setdist(float dist)
 
 QString shphere::getFigureInfo()
 {
-    QString text="Стартовая точка Шферы: x="+QString().setNum(m_x0)+","+QString().setNum(m_y0)+","+QString().setNum(m_z0);
+    QString text="Стартовая точка Шферы: x="+QString().setNum(m_x0)+", "+QString().setNum(m_y0)+", "+QString().setNum(m_z0);
     return text;  // так как переменная уничтожается после выхода из функции, надо использовать спецификатор const
 }

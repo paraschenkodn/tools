@@ -19,10 +19,23 @@
      <rect>
       <x>10</x>
       <y>20</y>
-      <width>69</width>
+      <width>161</width>
       <height>22</height>
      </rect>
     </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <item>
+     <property name="text">
+      <string>Перспективная проекция</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Ортогональная проекция</string>
+     </property>
+    </item>
    </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">
@@ -260,7 +273,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Ортогональная проекция</string>
+    <string>Тестирование (Режим разработчика)</string>
    </property>
   </action>
   <action name="action_2">
@@ -268,7 +281,12 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Перспективная проекция</string>
+    <string>Рабочий режим</string>
+   </property>
+  </action>
+  <action name="actionProj">
+   <property name="text">
+    <string>proj</string>
    </property>
   </action>
  </widget>

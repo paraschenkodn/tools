@@ -11,8 +11,8 @@ Text::Text()
   // переменная рисовальщика
   //p2p();
 
-  // грузим текстуру
-  m_texture=new QOpenGLTexture(QImage(":/Textures/rbt.png"));
+  // грузим текстуру test
+  //m_texture=new QOpenGLTexture(QImage(":/Textures/Blocks.jpg"));
 
   // инициализируем шейдеры
   QOpenGLShader vShader(QOpenGLShader::Vertex);
@@ -53,12 +53,12 @@ void Text::drawO(const QMatrix4x4 & mvpmatrix, const QString &_str, const QVecto
 
         QFontMetrics fm(font);
         QRect rect = fm.boundingRect(_str); // text bounding box
-        rect.adjust(0, 0, 1, 1);            // normalize bounding box
+        rect.adjust(0, 0, 1, 1);            // прибавили по единице ко второй точке
 
         QImage image(rect.size(), QImage::Format_ARGB32);
         image.fill(0); // set to transparent
 
-        // Draw the text on an image
+        // Draw the text on an image by QPainter
         p2d. begin(&image);
         p2d. setFont(font);
         p2d. setPen(pen);
@@ -83,7 +83,10 @@ void Text::drawO(const QMatrix4x4 & mvpmatrix, const QString &_str, const QVecto
         //gluProject(coords.x(), coords.y(), coords.z(),
             //modelMatrix, projMatrix, view,
             //&winx, &winy, &winz);
-        QVector3D win=mvpmatrix.mapVector(coords);
+        //QVector4D win=coords.toVector4D();
+        QVector3D win=mvpmatrix.map(coords); // получили координаты в нормализованных к -1,1 координатах
+        win.setX((win.x()+1)*view[2]/2); // получили в координатах окна показа viewport
+        win.setY((win.y()+1)*view[3]/2);
 
         // Define the font rectangle
         int x = (int) win.x(), y = (int) win.y();
@@ -119,8 +122,8 @@ void Text::drawO(const QMatrix4x4 & mvpmatrix, const QString &_str, const QVecto
         //texCoord.append(1.0f, 1.0f);
         //texCoord.append(1.0f, 0.0f);//
         texCoord.resize(8);
-        texCoord[0]=0.0f; texCoord[1]=0.0f; texCoord[2]=0.0f; texCoord[3]=1.0f;
-        texCoord[4]=1.0f; texCoord[5]=1.0f; texCoord[6]=1.0f; texCoord[7]=0.0f;
+        texCoord[0]=0.0f; texCoord[1]=1.0f; texCoord[2]=0.0f; texCoord[3]=0.0f;
+        texCoord[4]=1.0f; texCoord[5]=0.0f; texCoord[6]=1.0f; texCoord[7]=1.0f;
 
         // Map the image to texture
         //QGLTexture2D texture;
@@ -139,13 +142,14 @@ void Text::drawO(const QMatrix4x4 & mvpmatrix, const QString &_str, const QVecto
         //painter->projectionMatrix() = projm;
 
         // Enable blend to make the background transparency of the text
-        //glEnable(GL_BLEND);
-        //glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
         //painter->clearAttributes();
         //painter->setStandardEffect(QGL::FlatReplaceTexture2D);
 
         texture.bind();
+        //m_texture->bind();
         //painter->setVertexAttribute(QGL::Position, vertices);
         //painter->setVertexAttribute(QGL::TextureCoord0, texCoord);
 

@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QActionGroup>
 
 namespace Ui {
   class MainWindow;
@@ -17,11 +18,16 @@ public:
 
 private:
   Ui::MainWindow *ui;
+  QActionGroup *AG;
+
+signals:
+  // устанавливаем режим рисования
+  void setPaintMode(int);
 
 public slots:
-  // устанавливаем инфотекст о проекции
-  //void setPerspectiveInfo(QString &text);
-
+  // устанавливаем режим рисования
+  void toPaintModeDM();
+  void toPaintModeKarta();
 };
 
 #endif // MAINWINDOW_H

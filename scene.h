@@ -24,6 +24,8 @@ public:
 private:
   void initializeGL();
   void paintGL();
+  void paintDM(); // рисование в режиме разработчика
+  void paintKarta(); // рисование в режиме построения карты (InterNet-Router-SubNet-LAN-Node)
   void resizeGL(int w, int h);
 
   // определяем метод изменяющий координаты положения треугольника
@@ -73,11 +75,12 @@ private:
   void defaultStates();
 
   bool perspective;  // признак рисования в перспективной или в ортогональной проекции
+  int paintMode; // режим рисования
 public slots:
-  // устанавливаем признак рисования в ортогональной проекции
-  void setOrthogonal();
-  // устанавливаем признак рисования в перспективной проекции
-  void setPerspective();
+  // устанавливаем признак рисования в перспективной или ортогональной проекции
+  void setPerspective(int _switch);
+  // Установка режима рисования
+  void setPaintMode(int mode);
 private slots:
   // заставляем прорисовываться по таймеру
   void slotAnimation();
