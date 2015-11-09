@@ -10,13 +10,13 @@ class Text
 {
 public:
     Text();
-    void init();
+    void set();
     void drawO(const QMatrix4x4 & mvpmatrix, const QString &_str, const QVector3D &coords); // рисуем текст в ортогональной проекции (поверх основной сцены)
-    void drop();
+    void reset();
 
     // TODO
     //void init();  // загрузка шрифтов в буфер ОГЛ
-    //void draw(QString str); // рисуем text (шейдерами)
+    //void drawSHP(QString str); // рисуем text (шейдерами) perspective projection
     //void drop();
 
     QPainter p2d;  // paint device (рисовальщик нашей текстуры)

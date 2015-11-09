@@ -4,13 +4,7 @@
 Text::Text()
 {
   // создаём переменные по умолчанию
-  //font(); pen();
   pen.setColor(QColor(255,255,255,255));
-  // прямоугольник рисования
-  // текстура
-  // переменная рисовальщика
-  //p2p();
-
   // грузим текстуру test
   //m_texture=new QOpenGLTexture(QImage(":/Textures/Blocks.jpg"));
 
@@ -34,7 +28,7 @@ Text::Text()
   m_texUniform=program.attributeLocation("texUniform");//*/
 }
 
-void Text::init()
+void Text::set()
 {
   //подключаем программу и проверяем
   if (!program.bind()){
@@ -71,19 +65,6 @@ void Text::drawO(const QMatrix4x4 & mvpmatrix, const QString &_str, const QVecto
         glGetIntegerv(GL_VIEWPORT, view);
 
         // Convert the object coordinate to screen coordinate
-        //GLdouble winx, winy, winz; // the screen coordinate of the object
-        //model = painter->modelViewMatrix().top();
-        //proj = painter->projectionMatrix().top();
-        //GLdouble modelMatrix[16];
-        //for (int i = 0; i < 16; i++)
-            //modelMatrix[i] = model.data()[i];
-        //GLdouble projMatrix[16];
-        //for (int i = 0; i < 16; i++)
-            //projMatrix[i] = proj.data()[i];
-        //gluProject(coords.x(), coords.y(), coords.z(),
-            //modelMatrix, projMatrix, view,
-            //&winx, &winy, &winz);
-        //QVector4D win=coords.toVector4D();
         QVector3D win=mvpmatrix.map(coords); // получили координаты в нормализованных к -1,1 координатах
         win.setX((win.x()+1)*view[2]/2); // получили в координатах окна показа viewport
         win.setY((win.y()+1)*view[3]/2);
@@ -104,56 +85,30 @@ void Text::drawO(const QMatrix4x4 & mvpmatrix, const QString &_str, const QVecto
             y -= rect.height() / 2;
         }
 
-        //QVector2DArray vertices;
-        //vertices.append(x, y);
-        //vertices.append(x, y + rect.height());
-        //vertices.append(x + rect.width(), y + rect.height());
-        //vertices.append(x + rect.width(), y);//
         vertices.resize(8);
         vertices[0]=x; vertices[1]=y;
         vertices[2]=x; vertices[3]=y + rect.height();
         vertices[4]=x + rect.width(); vertices[5]=y + rect.height();
         vertices[6]=x + rect.width(); vertices[7]=y;
 
-        // Texture coordinates
-        //QVector2DArray texCoord;
-        //texCoord.append(0.0f, 0.0f);
-        //texCoord.append(0.0f, 1.0f);
-        //texCoord.append(1.0f, 1.0f);
-        //texCoord.append(1.0f, 0.0f);//
         texCoord.resize(8);
         texCoord[0]=0.0f; texCoord[1]=1.0f; texCoord[2]=0.0f; texCoord[3]=0.0f;
         texCoord[4]=1.0f; texCoord[5]=0.0f; texCoord[6]=1.0f; texCoord[7]=1.0f;
 
         // Map the image to texture
-        //QGLTexture2D texture;
-        //texture.setImage(image);
         QOpenGLTexture texture(image);
-
-        // Set projection matrix stack
-        //painter->modelViewMatrix().push();
-        //painter->modelViewMatrix().setToIdentity();
 
         // Use ortho projection to draw the text
         QMatrix4x4 projm;
         projm.ortho(view[0], view[2], view[1], view[3], 0, 1);
 
-        //painter->projectionMatrix().push();
-        //painter->projectionMatrix() = projm;
-
         // Enable blend to make the background transparency of the text
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-        //painter->clearAttributes();
-        //painter->setStandardEffect(QGL::FlatReplaceTexture2D);
-
         texture.bind();
-        //m_texture->bind();
-        //painter->setVertexAttribute(QGL::Position, vertices);
-        //painter->setVertexAttribute(QGL::TextureCoord0, texCoord);
 
-        // translate data
+        // translate data to shader
         program.setAttributeArray(m_vertexAttr, vertices.data(), 2);
         //m_program.setAttributeArray(m_colorAttr, m_colors.data(), 3);
         program.setAttributeArray(m_texAttr, texCoord.data(), 2);
@@ -166,7 +121,6 @@ void Text::drawO(const QMatrix4x4 & mvpmatrix, const QString &_str, const QVecto
 
         program.setUniformValue(m_MVPmatrix, projm);
 
-        //painter->draw(QGL::TriangleFan, 4);
         // рисуем треугольник
         glDrawArrays(GL_TRIANGLE_FAN,0,4);
 
@@ -175,17 +129,11 @@ void Text::drawO(const QMatrix4x4 & mvpmatrix, const QString &_str, const QVecto
         //program.disableAttributeArray(m_colorAttr);
         program.disableAttributeArray(m_texAttr);
 
-        //painter->setStandardEffect (QGL::FlatColor);
         glBindTexture(GL_TEXTURE_2D, 0);
         glDisable(GL_BLEND);
-
-        // Restore the matrix stack
-        //painter->projectionMatrix().pop();
-        //painter->modelViewMatrix().pop();
-        //*/
 }
 
-void Text::drop()
+void Text::reset()
 {
   // очищаем программу
   program.release();

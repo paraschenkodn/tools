@@ -18,14 +18,16 @@ SOURCES += main.cpp\
     triangle.cpp \
     pointsofsphere.cpp \
     shphere.cpp \
-    text.cpp
+    text.cpp \
+    mapbuilder.cpp
 
 HEADERS  += mainwindow.h \
     scene.h \
     triangle.h \
     pointsofsphere.h \
     shphere.h \
-    text.h
+    text.h \
+    mapbuilder.h
 
 FORMS    += mainwindow.ui
 

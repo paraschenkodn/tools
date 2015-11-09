@@ -73,6 +73,8 @@ void Triangle::draw()   // draw(*allcoords); // vertex, color, textures
 
     // рисуем треугольник
     glDrawArrays(GL_TRIANGLES,0,m_vertices.size()/3);
+    //glLineWidth(10);
+    //glDrawArrays(GL_LINE_LOOP,0,m_vertices.size()/3);
 
     // деактивируем массивы
     m_program.disableAttributeArray(m_vertexAttr);
