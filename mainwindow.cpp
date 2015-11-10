@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent) :
   connect(ui->SceneWidget,SIGNAL(setFiguresInfo(QString)),ui->label_2,SLOT(setText(QString)));      // отображение информации со сцены
   connect(ui->SceneWidget,SIGNAL(setFiguresInfo2(QString)),ui->label_4,SLOT(setText(QString)));     // отображение информации со сцены
   connect(ui->comboBox,SIGNAL(currentIndexChanged(int)),ui->SceneWidget,SLOT(setPerspective(int))); // переключение вида проекции
-  connect(ui->action_3,SIGNAL(toggled(bool)),ui->SceneWidget,SLOT(buildNewMap()));  // открытие файла и построение новой карты
+  connect(ui->action_3,SIGNAL(triggered(bool)),ui->SceneWidget,SLOT(buildNewMap()));  // открытие файла и построение новой карты
   //ui->comboBox->setWindowOpacity(0.1);
   AG=new QActionGroup(this);    // оформление тригерного меню
   AG->addAction(ui->action);

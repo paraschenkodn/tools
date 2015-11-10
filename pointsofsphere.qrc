@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>2-300.txt</file>
         <file>xyz/xyz for N=   2.txt</file>
         <file>xyz/xyz for N=   3.txt</file>
         <file>xyz/xyz for N=   4.txt</file>

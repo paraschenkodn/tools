@@ -28,6 +28,7 @@ public slots:
   // устанавливаем режим рисования
   void toPaintModeDM();
   void toPaintModeKarta();
+private slots:
 };
 
 #endif // MAINWINDOW_H
