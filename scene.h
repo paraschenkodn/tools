@@ -6,6 +6,8 @@
 #include "pointsofsphere.h"
 #include "shphere.h"
 #include "text.h"
+#include "mapbuilder.h"
+
 #include <QOpenGLShaderProgram>
 #include <QKeyEvent>
 #include <QTimer>
@@ -39,7 +41,7 @@ private:
   void wheelEvent(QWheelEvent * event);  // переопределяем функции обработки сообщений мыши (колесо)
 
   // переменные фигур
-  const float step=0.01f; // шаг сдвига фигур
+  float step; // шаг сдвига фигур
 
   // переменные камеры
   float ratio;
@@ -57,6 +59,8 @@ private:
   shphere *m_shphere;
   pointsofsphere *spherepoints;
   Text *m_text;
+
+  MapBuilder *buildermap;   // класс картостроителя
 
   void setFigureInfo(); // формируем и посылаем текст для отображения параметров в главном окне
 
@@ -81,6 +85,8 @@ public slots:
   void setPerspective(int _switch);
   // Установка режима рисования
   void setPaintMode(int mode);
+  // строим новую карту
+  void buildNewMap();
 private slots:
   // заставляем прорисовываться по таймеру
   void slotAnimation();

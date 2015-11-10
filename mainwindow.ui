@@ -256,6 +256,7 @@
     </property>
     <addaction name="action"/>
     <addaction name="action_2"/>
+    <addaction name="action_3"/>
    </widget>
    <addaction name="menuKarta"/>
   </widget>
@@ -287,6 +288,11 @@
   <action name="actionProj">
    <property name="text">
     <string>proj</string>
+   </property>
+  </action>
+  <action name="action_3">
+   <property name="text">
+    <string>Открыть файл</string>
    </property>
   </action>
  </widget>

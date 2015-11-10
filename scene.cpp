@@ -4,6 +4,7 @@
 
 Scene::Scene(QWidget *parent) :
     QOpenGLWidget (parent),
+    step(0.01f), // шаг сдвига фигур
     m_angle(0),
     perspective(true),
     paintMode(1)
@@ -29,6 +30,8 @@ Scene::Scene(QWidget *parent) :
   cameraCenter=QVector3D(0.0f,0.0f,-0.5f);
   cameraUp=QVector3D(0.0f,1.0f,0.0f);
   cameraFocusAngle=90;                // устанавливаем начальный угол проекции
+
+  buildermap=new MapBuilder();
 }
 
 Scene::~Scene()
@@ -36,7 +39,10 @@ Scene::~Scene()
 makeCurrent();      // тут используется текущий контекст системы, т.к. QOpenGLWidget::currentContext() уже нет
 delete m_triangle;
     delete spherepoints;
+delete m_shphere;
+delete m_text;
 doneCurrent();
+//delete buildermap;
 }
 
 void Scene::initializeGL() {
@@ -212,7 +218,7 @@ void Scene::setStates()
 void Scene::setLights()
 {
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-    float lightColour[] = {1.0f, 0.9f, 0.9f, 1.0f};
+    //float lightColour[] = {1.0f, 0.9f, 0.9f, 1.0f};
 
     ///glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColour);
 
@@ -256,7 +262,12 @@ void Scene::setPerspective(int _switch)
 
 void Scene::setPaintMode(int mode)
 {
-  paintMode=mode;
+    paintMode=mode;
+}
+
+void Scene::buildNewMap()
+{
+    buildermap->newmap();
 }
 
 void Scene::keyPressEvent(QKeyEvent *event)
@@ -329,17 +340,17 @@ void Scene::keyPressEvent(QKeyEvent *event)
 
 void Scene::mousePressEvent(QMouseEvent *event)
 {
-  ;
+  if (event) step=step;
 }
 
 void Scene::mouseReleaseEvent(QMouseEvent *event)
 {
-  ;
+  if (event) step=step;
 }
 
 void Scene::mouseMoveEvent(QMouseEvent *event)
 {
-  ;
+  if (event) step=step;
 }
 
 void Scene::wheelEvent(QWheelEvent *event)
