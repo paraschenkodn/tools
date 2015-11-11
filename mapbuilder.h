@@ -6,8 +6,6 @@
 #include <QDebug>
 #include <QVector>
 
-//#include "b.h"
-
 #define FLAT_MAP    1
 #define SPHERE_MAP  2
 
@@ -20,14 +18,19 @@ public:
     void sphereMap();   // строим сферообразную карту
     void newmap();      // готовим новые данные для карт
 
+    void addPairHostsSt(QString &, QString &);    // добавление пары хостов (передатчик-приёмник)
+    float gridStep;     // шаг сетки координат
+    void parserTRT();   // парсер данных команды tracert
+
     int currentmap;        // текущий вид карты
     QString filename;
 
-    std::vector<float> vertices;    // пары координат (передатчик-приёмник)
-    std::vector<QString>    data;   // собственно пара надписей на заборе для передачика и приёмника
-    QVector<float>  coords;         //
-    QVector<QString>    caption;    //
+    QVector<QString>    hosts;      // СЫРОЙ СПИСОК (из парсера) собственно пара надписей на заборе для передачика и приёмника
+    QVector<float>      vertices;         // пары координат (передатчик-приёмник)
+    QVector<QString>    caption;    // надписи для точек
 
 };
+
+//#include "buildermap.h"
 
 #endif // MAPBUILDER_H
