@@ -26,7 +26,7 @@ public:
     QString filename;
 
     QVector<QString>    hosts;      // СЫРОЙ СПИСОК (из парсера) собственно пара надписей на заборе для передачика и приёмника
-    QVector<float>      vertices;         // пары координат (передатчик-приёмник)
+    QVector<float>    vertices;         // пары координат (передатчик-приёмник)
     QVector<QString>    caption;    // надписи для точек
 
 };

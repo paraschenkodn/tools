@@ -19,7 +19,8 @@ SOURCES += main.cpp\
     pointsofsphere.cpp \
     shphere.cpp \
     text.cpp \
-    mapbuilder.cpp
+    mapbuilder.cpp \
+    buildermap.cpp
 
 HEADERS  += mainwindow.h \
     scene.h \
@@ -27,7 +28,8 @@ HEADERS  += mainwindow.h \
     pointsofsphere.h \
     shphere.h \
     text.h \
-    mapbuilder.h
+    mapbuilder.h \
+    buildermap.h
 
 FORMS    += mainwindow.ui
 
