@@ -257,6 +257,7 @@
     <addaction name="action"/>
     <addaction name="action_2"/>
     <addaction name="action_3"/>
+    <addaction name="action_4"/>
    </widget>
    <addaction name="menuKarta"/>
   </widget>
@@ -292,7 +293,12 @@
   </action>
   <action name="action_3">
    <property name="text">
-    <string>Открыть файл</string>
+    <string>Открыть файл (Новая карта)</string>
+   </property>
+  </action>
+  <action name="action_4">
+   <property name="text">
+    <string>Добавить из файла (Добавить к карте)</string>
    </property>
   </action>
  </widget>

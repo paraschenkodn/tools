@@ -15,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent) :
   connect(ui->SceneWidget,SIGNAL(setFiguresInfo2(QString)),ui->label_4,SLOT(setText(QString)));     // отображение информации со сцены
   connect(ui->comboBox,SIGNAL(currentIndexChanged(int)),ui->SceneWidget,SLOT(setPerspective(int))); // переключение вида проекции
   connect(ui->action_3,SIGNAL(triggered(bool)),ui->SceneWidget,SLOT(buildNewMap()));  // открытие файла и построение новой карты
+  connect(ui->action_4,SIGNAL(triggered(bool)),ui->SceneWidget,SLOT(addMap()));  // открытие файла и добавление новых данных к карте
   //ui->comboBox->setWindowOpacity(0.1);
   AG=new QActionGroup(this);    // оформление тригерного меню
   AG->addAction(ui->action);
@@ -34,7 +35,7 @@ void MainWindow::toPaintModeDM()    // установка режима рисо�
   ui->label_2->setVisible(true);
   ui->label_3->setVisible(true);
   ui->label_4->setVisible(true);
-  emit setPaintMode(1);
+  emit setPaintMode(1);             //TEST (DEVELOPER_MODE)
 }
 
 void MainWindow::toPaintModeKarta() // установка режима рисования
@@ -45,5 +46,5 @@ void MainWindow::toPaintModeKarta() // установка режима рисо�
   ui->label_3->setVisible(false);
   ui->label_4->setVisible(false);
   ui->comboBox->setCurrentIndex(0);
-  emit setPaintMode(2);
+  emit setPaintMode(2);             // KARTA MODE
 }

@@ -181,15 +181,46 @@ void Scene::paintDM()
 
 void Scene::paintKarta()
 {
-  paintDM();
+    setStates();                    // включаем буфер глубины, свет и прочее (возможно можно вынести в initGL)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //пишем матрицы преобразований
+    QMatrix4x4 LMM; // Local Model matrix (делает преобразования в локальных координатах объекта, для одного объекта их может быть несколько для разных частей объекта)
+    QMatrix4x4 MM; // Model matrix (выносит координаты объекта в координаты пространства сцены,
+                  //выполняется в следующем порядке - масштабирование, поворот, перенос)
+                  // TranslationMatrix * RotationMatrix * ScaleMatrix * OriginalVector; (в коде это выглядит в обратном порядке)
+    QMatrix4x4 MVM; // ModelView matrix (View matrix)("масштабирует крутит и перемещает весь мир")
+    QMatrix4x4 CameraView; // тоже самое что и MVM, но для использования функции LookAt
+    QMatrix4x4 PM; // Projection matrix // проекционная матрица
+    QMatrix4x4 MVPM; // ModelViewProjection matrix (projection * view * model)
+    PM.perspective(cameraFocusAngle,ratio,0.1f,100.0f);  // glFrustum( xmin, xmax, ymin, ymax, near, far)  // gluPerspective(fovy, aspect, near, far)
+    //MVM.rotate(m_angle,0.0f,1.0f,0.0f);  // поворот вокруг оси центра координат
+    CameraView.lookAt(cameraEye,cameraCenter,cameraUp); // установка камеры (матрицы трансфрмации)
+    MVM=CameraView; //*MVM;  // получаем матрицу трансформации итогового вида
+    MVPM=PM*MVM;
+
+    // находим проекционную инверсную мтрицу
+    bool inverted;
+    QMatrix4x4 PMi=PM.inverted(&inverted);
+    if (!inverted)
+        qDebug() << "PMi не конвертится";
+    QMatrix4x4 MVPMi=MVPM.inverted(&inverted);
+    if (!inverted)
+        qDebug() << "MVPMi не конвертится";
+
+
+    if (buildermap->currentmap==FLAT_MAP) paintFlatMap();
+    //проверяем, готовы ли данные, если да, то копируем для отображения
+
+}
+
+void Scene::paintFlatMap()
+{
+  ;
 }
 
 void Scene::resizeGL(int w, int h){
   if (perspective) {
       ratio = (1.0*w)/(!h?1:h);
-  }
-  else {
-
   }
 glViewport(0,0,w,h);
 viewport.setX(0); viewport.setY(0); viewport.setZ((float)w); viewport.setW((float)h);
@@ -262,20 +293,30 @@ void Scene::setPerspective(int _switch)
 
 void Scene::setPaintMode(int mode)
 {
-    paintMode=mode;
+    paintMode=mode; // 1- test, 2 - karta
 }
 
 void Scene::buildNewMap()
 {
-    buildermap->newmap();
+    buildermap->newmap(true);   //false - добавка к существующей, true - построение новой с нуля
+}
+
+void Scene::addMap()
+{
+    buildermap->newmap(false);   //false - добавка к существующей, true - построение новой с нуля
 }
 
 void Scene::keyPressEvent(QKeyEvent *event)
 {
   switch (event->key()) {
     case Qt::Key_Up:
+      if (paintMode==TEST_MODE) {
           m_triangle->sety0(m_triangle->m_y0+step);
           m_shphere->sety0(m_shphere->m_y0+step);
+      }
+      else { //KARTA_MODE
+          ;
+      }
       break;
     case Qt::Key_Left:
           m_triangle->setx0(m_triangle->m_x0-step);

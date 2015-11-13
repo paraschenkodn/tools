@@ -14,6 +14,10 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLFunctions_3_0>
 
+/// PAINT MODE
+#define TEST_MODE   1
+#define KARTA_MODE  2
+
 class Scene : public QOpenGLWidget
 {
   Q_OBJECT
@@ -28,6 +32,8 @@ private:
   void paintGL();
   void paintDM(); // рисование в режиме разработчика
   void paintKarta(); // рисование в режиме построения карты (InterNet-Router-SubNet-LAN-Node)
+  void paintFlatMap(); // рисование плоской карты
+  void paintSphereMap(); // рисование сферической карты
   void resizeGL(int w, int h);
 
   // определяем метод изменяющий координаты положения треугольника
@@ -84,9 +90,11 @@ public slots:
   // устанавливаем признак рисования в перспективной или ортогональной проекции
   void setPerspective(int _switch);
   // Установка режима рисования
-  void setPaintMode(int mode);
+  void setPaintMode(int mode);  // 1 - test, 2 - karta
   // строим новую карту
   void buildNewMap();
+  // добавляем в карту
+  void addMap();
 private slots:
   // заставляем прорисовываться по таймеру
   void slotAnimation();

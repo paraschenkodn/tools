@@ -16,19 +16,22 @@ public:
 
     void flatMap();     // строим плоскую карту
     void sphereMap();   // строим сферообразную карту
-    void newmap();      // готовим новые данные для карт
+    void newmap(bool clear);      // готовим новые данные для карт
 
-    void addPairHostsSt(QString &tr, QString &rec);    // добавление пары хостов (передатчик-приёмник)
     void parserTRT();   // парсер данных команды tracert
 
     int currentmap;        // текущий вид карты
     QString filename;
 
-    QVector<QString>    hosts;      // СЫРОЙ СПИСОК (из парсера) собственно пара надписей на заборе для передачика и приёмника
-    QVector<float>    vertices;         // пары координат (передатчик-приёмник)
-    QVector<QString>    caption;    // надписи для точек
+    QVector<QString>    hosts;      // временный СЫРОЙ СПИСОК (из парсера) собственно пара надписей на заборе для передачика и приёмника
+    QVector<QString>    pairs;    // общий список пар хостов в сети
+    QVector<float>    vertices;         // пары точек (передатчик-приёмник)
+    QVector<QString>    captions; //надписи для пар точек
 
     // ********* ПЛОСКАЯ КАРТА ********** функции и переменные
+    void fmapPairHostsSt(QString &tr, QString &rec);    // картирование пары хостов (добавление на карту пары передатчик-приёмник)
+    void fmapToVertices();                          // сброс координатной сетки в координаты вершин
+    void flatMapPairHostsSt();                          // TODO картирование напрямую в координатной сетке, без использования массива fmap
     QVector< QVector<QString> > fmap;   // координатная сетка точек (индексов точек пар) служит для построения
     float gridStep;     // шаг сетки координат
     int sizefmap;   // размер координатной сетки
