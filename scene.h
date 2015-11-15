@@ -7,6 +7,7 @@
 #include "shphere.h"
 #include "text.h"
 #include "mapbuilder.h"
+#include "karta.h"
 
 #include <QOpenGLShaderProgram>
 #include <QKeyEvent>
@@ -65,6 +66,7 @@ private:
   shphere *m_shphere;
   pointsofsphere *spherepoints;
   Text *m_text;
+  Karta *karta;
 
   MapBuilder *buildermap;   // класс картостроителя
 

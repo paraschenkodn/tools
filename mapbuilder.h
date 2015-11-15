@@ -5,6 +5,7 @@
 #include <QTextStream>
 #include <QDebug>
 #include <QVector>
+#include <QMutex>
 
 #define FLAT_MAP    1
 #define SPHERE_MAP  2
@@ -13,14 +14,16 @@ class MapBuilder
 {
 public:
     MapBuilder();
+    QMutex m_mutex;
 
-    void flatMap();     // строим плоскую карту
-    void sphereMap();   // строим сферообразную карту
+    bool flatMap(bool clear);     // строим плоскую карту
+    bool sphereMap(bool clear);   // строим сферообразную карту
     void newmap(bool clear);      // готовим новые данные для карт
 
     void parserTRT();   // парсер данных команды tracert
 
     int currentmap;        // текущий вид карты
+    bool newmapbuild;      // новая карта готова для отображения (после копирования данных скидывается)
     QString filename;
 
     QVector<QString>    hosts;      // временный СЫРОЙ СПИСОК (из парсера) собственно пара надписей на заборе для передачика и приёмника

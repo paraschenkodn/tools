@@ -21,6 +21,9 @@ MainWindow::MainWindow(QWidget *parent) :
   AG->addAction(ui->action);
   AG->addAction(ui->action_2);
   ui->action->setChecked(true);
+
+  //lineEdit->setStyleSheet("QLineEdit {background-color: rgba(0, 0, 0, 0);}");
+  ui->comboBox->setStyleSheet("QComboBox {background-color: rgba(0, 0, 0, 0);}");
 }
 
 MainWindow::~MainWindow()

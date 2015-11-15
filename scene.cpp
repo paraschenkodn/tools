@@ -41,6 +41,7 @@ delete m_triangle;
     delete spherepoints;
 delete m_shphere;
 delete m_text;
+delete karta;
 doneCurrent();
 //delete buildermap;
 }
@@ -84,6 +85,9 @@ void Scene::initializeGL() {
 
     setCameraInfo(); // формируем и посылаем текст для отображения параметров в главном окне
     setFigureInfo(); //
+
+    // karta
+    karta = new Karta();
 }
 
 void Scene::paintGL(){
@@ -209,21 +213,26 @@ void Scene::paintKarta()
 
 
     if (buildermap->currentmap==FLAT_MAP) paintFlatMap();
-    //проверяем, готовы ли данные, если да, то копируем для отображения
-
 }
 
 void Scene::paintFlatMap()
 {
-  ;
+  //проверяем, готовы ли данные, если да, то копируем для отображения
+  if (buildermap->newmapbuild)  { /// TODO Перевести в сигнал
+      buildermap->m_mutex.lock();
+      karta->vertices.assign(buildermap->vertices.size(),buildermap->vertices.data()); // copy vertices
+      karta->captions=buildermap->captions; // copy captions
+      buildermap->newmapbuild=false; // забрали карту, готовьте новую
+      buildermap->m_mutex.unlock();
+    }
+
+  karta->draw();
 }
 
 void Scene::resizeGL(int w, int h){
-  if (perspective) {
-      ratio = (1.0*w)/(!h?1:h);
-  }
-glViewport(0,0,w,h);
-viewport.setX(0); viewport.setY(0); viewport.setZ((float)w); viewport.setW((float)h);
+    ratio = (1.0*w)/(!h?1:h);
+    glViewport(0,0,w,h);
+    viewport.setX(0); viewport.setY(0); viewport.setZ((float)w); viewport.setW((float)h);
 }
 
 void Scene::setStates()

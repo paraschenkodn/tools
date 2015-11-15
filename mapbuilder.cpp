@@ -11,8 +11,13 @@ sizefmap=10;
 resizemap();
 }
 
-void MapBuilder::flatMap()
+bool MapBuilder::flatMap(bool clear)
 {
+  if (clear) {        // строится новая в режиме добавления или с нуля
+      pairs.clear();
+      fmap.clear();
+      resizemap();
+  }
     // 1. открываем файл
     // 2. на его основе заполняем временную структуру данных для сцены
     // 3. устанавливаем начальный кадр во временной структуре
@@ -24,15 +29,18 @@ void MapBuilder::flatMap()
         fmapPairHostsSt(hosts[i],hosts[i+1]);
     }
     fmapToVertices();   // карту в вершины
+  return true;
 }
 
-void MapBuilder::sphereMap()
-{
-
+bool MapBuilder::sphereMap(bool clear)
+{  
+return true;
 }
 
 void MapBuilder::newmap(bool clear)
 {
+  m_mutex.lock();
+  newmapbuild=false;
     filename=QFileDialog::getOpenFileName( 0, QString("Open File"));
     if (filename.isEmpty())
         return;
@@ -40,15 +48,12 @@ void MapBuilder::newmap(bool clear)
 
     //строим данные во временное хранилище данных
     //TODO(если возникает ошибка сворачиваем всю работу с сообщением об ошибке)
-    if (clear) {        // строится новая в режиме добавления или с нуля
-        pairs.clear();
-        fmap.clear();
-        resizemap();
-    }
+    flatMap(clear);
+    sphereMap(clear);
 
-    flatMap();
-
-    sphereMap();
+  m_mutex.unlock();
+  newmapbuild=true; // карта готова, забирайте, после не забудьте скинуть на 0 (false)
+  //TODO лучше оформить/дополнить это дело сигналом
 }
 
 void MapBuilder::fmapPairHostsSt(QString &tr, QString &rec)  // распределение хостов по координатной сетке (hosts хранит пары), fmap (хранит привязку хоста к карте)
