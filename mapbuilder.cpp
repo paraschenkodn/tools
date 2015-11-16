@@ -34,7 +34,7 @@ bool MapBuilder::flatMap(bool clear)
 
 bool MapBuilder::sphereMap(bool clear)
 {  
-return true;
+return clear;
 }
 
 void MapBuilder::newmap(bool clear)
@@ -60,8 +60,8 @@ void MapBuilder::fmapPairHostsSt(QString &tr, QString &rec)  // распреде
 { /// tr- трансивер (передатчик), rec - приёмник (receiver)
     // обрабатываем полученную структуру списка хостов и полученную пару типа string
     // проверяем, были ли такие IP
-    int a=pairs.IndexOf(tr); //OldIp  (нам надо найти последнюю пару, тогда за ней можно взять новую позицию для приёмника)
-    int b=pairs.IndexOf(rec); //Ip
+    int a=pairs.indexOf(tr); //OldIp  (нам надо найти последнюю пару, тогда за ней можно взять новую позицию для приёмника)
+    int b=pairs.indexOf(rec); //Ip
     // проверяем совпадение пары на пару
     if ((b-a)==1||(a-b)==1){  // было, пропускаем, возможен и обратный вариант
         return;
@@ -75,11 +75,11 @@ void MapBuilder::fmapPairHostsSt(QString &tr, QString &rec)  // распреде
         // такое по идее может быть только с первой парой, т.к. у нас связанные последовательно данные, но мало ли, надо как-то отработать ситуацию
         // TODO проверяем точку на координатной сетке на непустоту
         // размещаем на координатной сетке (посередине первой строки)
-        if (fmap[0][sizefmap/2].isEmpty()) { // TODO делаем проверку на незанятость начала координат (если это случилось то else ...)
-           fmap[0][sizefmap/2]=tr; // xyz tr
+        if (fmap[0][(sizefmap/2)-1].isEmpty()) { // TODO делаем проверку на незанятость начала координат (если это случилось то else ...)
+           fmap[0][(sizefmap/2)-1]=tr; // xyz tr
         }
-        if (fmap[0][sizefmap/2+1].isEmpty()) { // TODO делаем проверку на незанятость начала координат (если это случилось то else ...)
-           fmap[0][sizefmap/2+1]=tr; // xyz rec
+        if (fmap[0][sizefmap/2].isEmpty()) { // TODO делаем проверку на незанятость начала координат (если это случилось то else ...)
+           fmap[0][sizefmap/2]=rec; // xyz rec
         }
         return; // после занесения координат и других данных делать больше нечего
     }
@@ -92,7 +92,7 @@ void MapBuilder::fmapPairHostsSt(QString &tr, QString &rec)  // распреде
         if ((r+1)==sizefmap||(c+1)==sizefmap) { // уже впритык, делаем запас (можно не на +1 а на порядок, например +10)
             sizefmap++; // на одну
             fmap.resize(sizefmap); // увеличиваем список строк (добавляется одна)
-            for (int i;i<sizefmap;i++){ //проходим по строкам и увеличиваем до нового размера сетки (добавляется одна колонка в строке)
+            for (int i=0;i<sizefmap;i++){ //проходим по строкам и увеличиваем до нового размера сетки (добавляется одна колонка в строке)
                 fmap[i].resize(sizefmap);
             }
         }
@@ -101,9 +101,9 @@ void MapBuilder::fmapPairHostsSt(QString &tr, QString &rec)  // распреде
             // если нижележащая точка тоже занята, раздвигаем сетку
             if (!fmap[r+1][c+1].isEmpty()) { // тоже занято
                 // расширяемся
-                fmap.insert(r+1, QVector<QString> );
+                fmap.insert(r+1, QVector<QString>() );
                 sizefmap++;
-                for (int i;i<sizefmap;i++){ //проходим по строкам и увеличиваем до нового размера сетки
+                for (int i=0;i<sizefmap;i++){ //проходим по строкам и увеличиваем до нового размера сетки
                     fmap[i].resize(sizefmap);
                 }
             }
@@ -126,7 +126,7 @@ void MapBuilder::fmapPairHostsSt(QString &tr, QString &rec)  // распреде
         if ((r+1)==sizefmap) { // уже впритык, делаем запас (можно не на +1 а на порядок, например +10)
             sizefmap++; // на одну
             fmap.resize(sizefmap); // увеличиваем список строк (добавляется одна)
-            for (int i;i<sizefmap;i++){ //проходим по строкам и увеличиваем до нового размера сетки (добавляется одна колонка в строке)
+            for (int i=0;i<sizefmap;i++){ //проходим по строкам и увеличиваем до нового размера сетки (добавляется одна колонка в строке)
                 fmap[i].resize(sizefmap);
             }
         }
@@ -134,7 +134,7 @@ void MapBuilder::fmapPairHostsSt(QString &tr, QString &rec)  // распреде
         if ((c-1)<1) { // уже впритык, делаем запас (можно не на +1 а на порядок, например +10)
             sizefmap++; // на одну
             fmap.resize(sizefmap); // увеличиваем список строк (добавляется одна)
-            for (int i;i<sizefmap;i++){ //проходим по строкам и увеличиваем до нового размера сетки (вставляется в начало одна колонка в строке)
+            for (int i=0;i<sizefmap;i++){ //проходим по строкам и увеличиваем до нового размера сетки (вставляется в начало одна колонка в строке)
                 fmap[i].insert(0,QString(""));
             }
         }
@@ -143,9 +143,9 @@ void MapBuilder::fmapPairHostsSt(QString &tr, QString &rec)  // распреде
             // если нижележащая точка тоже занята, раздвигаем сетку
             if (!fmap[r+1][c-1].isEmpty()) { // тоже занято
                 // расширяемся
-                fmap.insert(r+1,QVector<QString>);
+                fmap.insert(r+1, QVector<QString>() );
                 sizefmap++;
-                for (int i;i<sizefmap;i++){ //проходим по строкам и увеличиваем до нового размера сетки
+                for (int i=0;i<sizefmap;i++){ //проходим по строкам и увеличиваем до нового размера сетки
                     fmap[i].resize(sizefmap);
                 }
             }
@@ -235,7 +235,7 @@ void MapBuilder::parserTRT()
 bool MapBuilder::getpointfmap(QString &data, int &row, int &col)
 {
     int tmp;
-    for (int i=0;fmap.size();i++)
+    for (int i=0;i<fmap.size();i++)
     {
         tmp=fmap[i].indexOf(data);
         if (tmp!=-1)

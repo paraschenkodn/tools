@@ -93,10 +93,10 @@ void Scene::initializeGL() {
 void Scene::paintGL(){
     switch (paintMode){
       case 1:
-        paintDM();
+        paintDM();      // test
         break;
       case 2:
-        paintKarta();
+        paintKarta();   //
         break;
       default:
         break;
@@ -114,15 +114,8 @@ void Scene::paintDM()
 
   //glMatrixMode(GL_MODELVIEW);
 
-  //пишем матрицы преобразований
-  QMatrix4x4 LMM; // Local Model matrix (делает преобразования в локальных координатах объекта, для одного объекта их может быть несколько для разных частей объекта)
-  QMatrix4x4 MM; // Model matrix (выносит координаты объекта в координаты пространства сцены,
-                //выполняется в следующем порядке - масштабирование, поворот, перенос)
-                // TranslationMatrix * RotationMatrix * ScaleMatrix * OriginalVector; (в коде это выглядит в обратном порядке)
-  QMatrix4x4 MVM; // ModelView matrix (View matrix)("масштабирует крутит и перемещает весь мир")
-  QMatrix4x4 CameraView; // тоже самое что и MVM, но для использования функции LookAt
-  QMatrix4x4 PM; // Projection matrix // проекционная матрица
-  QMatrix4x4 MVPM; // ModelViewProjection matrix (projection * view * model)
+  //инициализируем матрицы преобразований
+  PM.setToIdentity();
   if (perspective) {
       // устанавливаем трёхмерную канву (в перспективной проекции) для рисования (плоскости отсечения)
       // угол перспективы, отношение сторон, расстояние до ближней отсекающей плоскости и дальней
@@ -133,6 +126,7 @@ void Scene::paintDM()
       PM.ortho(-viewport.z()/viewport.w()*2,viewport.z()/viewport.w()*2,-2.0f,2.0f,-8.0f,8.0f); // glOrtho(left,right,bottom,top,near,far) // увеличение значений уменьшает фигуры на сцене (по Z задаём больше, чтобы не видеть отсечение фигур)
       // переносим по z дальше, обязательное условие для перспективной проекции // по оси z 0 это "глаз", - движение камеры назад, + вперёд.
   }
+  MVM.setToIdentity();  // установка начального значения
   ///MVM.translate(0.0f,0.0f,-6.0f); // переносим по z от "глаз", сдвигаем камеру на минус, т.е. в сторону затылка.
   // не работает в ортогональной проекции если перенести слишком далеко, за пределы куба отсечения
   // оппа, мы видим передние границы пирамиды отсечения, где всё отсекается (тут-то шейдерным сферам и конец)
@@ -140,16 +134,17 @@ void Scene::paintDM()
   ///MVM.scale(10.0f);  // отрицательное число переворачивает проекцию // влияет только на ортогональную проекцию // убивает Шферы
   // указываем угол поворота и ось поворота смотрящую из центра координат к точке x,y,z,
   MVM.rotate(m_angle,0.0f,1.0f,0.0f);  // поворот вокруг оси центра координат
+  CameraView.setToIdentity();
   CameraView.lookAt(cameraEye,cameraCenter,cameraUp); // установка камеры (матрицы трансфрмации)
   MVM=CameraView*MVM;  // получаем матрицу трансформации итогового вида
   MVPM=PM*MVM;
 
   // находим проекционную инверсную мтрицу
   bool inverted;
-  QMatrix4x4 PMi=PM.inverted(&inverted);
+  PMi=PM.inverted(&inverted);
   if (!inverted)
       qDebug() << "PMi не конвертится";
-  QMatrix4x4 MVPMi=MVPM.inverted(&inverted);
+  MVPMi=MVPM.inverted(&inverted);
   if (!inverted)
       qDebug() << "MVPMi не конвертится";
 
@@ -187,27 +182,20 @@ void Scene::paintKarta()
 {
     setStates();                    // включаем буфер глубины, свет и прочее (возможно можно вынести в initGL)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //пишем матрицы преобразований
-    QMatrix4x4 LMM; // Local Model matrix (делает преобразования в локальных координатах объекта, для одного объекта их может быть несколько для разных частей объекта)
-    QMatrix4x4 MM; // Model matrix (выносит координаты объекта в координаты пространства сцены,
-                  //выполняется в следующем порядке - масштабирование, поворот, перенос)
-                  // TranslationMatrix * RotationMatrix * ScaleMatrix * OriginalVector; (в коде это выглядит в обратном порядке)
-    QMatrix4x4 MVM; // ModelView matrix (View matrix)("масштабирует крутит и перемещает весь мир")
-    QMatrix4x4 CameraView; // тоже самое что и MVM, но для использования функции LookAt
-    QMatrix4x4 PM; // Projection matrix // проекционная матрица
-    QMatrix4x4 MVPM; // ModelViewProjection matrix (projection * view * model)
+    PM.setToIdentity();
     PM.perspective(cameraFocusAngle,ratio,0.1f,100.0f);  // glFrustum( xmin, xmax, ymin, ymax, near, far)  // gluPerspective(fovy, aspect, near, far)
     //MVM.rotate(m_angle,0.0f,1.0f,0.0f);  // поворот вокруг оси центра координат
+    CameraView.setToIdentity();
     CameraView.lookAt(cameraEye,cameraCenter,cameraUp); // установка камеры (матрицы трансфрмации)
     MVM=CameraView; //*MVM;  // получаем матрицу трансформации итогового вида
     MVPM=PM*MVM;
 
     // находим проекционную инверсную мтрицу
     bool inverted;
-    QMatrix4x4 PMi=PM.inverted(&inverted);
+    PMi=PM.inverted(&inverted);
     if (!inverted)
         qDebug() << "PMi не конвертится";
-    QMatrix4x4 MVPMi=MVPM.inverted(&inverted);
+    MVPMi=MVPM.inverted(&inverted);
     if (!inverted)
         qDebug() << "MVPMi не конвертится";
 
@@ -218,15 +206,75 @@ void Scene::paintKarta()
 void Scene::paintFlatMap()
 {
   //проверяем, готовы ли данные, если да, то копируем для отображения
-  if (buildermap->newmapbuild)  { /// TODO Перевести в сигнал
+  if (buildermap->newmapbuild)  { /// TODO Перевести в сигнал  (и в модуль карты)
       buildermap->m_mutex.lock();
-      karta->vertices.assign(buildermap->vertices.size(),buildermap->vertices.data()); // copy vertices
+      karta->vertices.assign(buildermap->vertices.begin(),buildermap->vertices.end()); // copy vertices
       karta->captions=buildermap->captions; // copy captions
       buildermap->newmapbuild=false; // забрали карту, готовьте новую
       buildermap->m_mutex.unlock();
     }
 
-  karta->draw();
+  //karta->draw();
+
+  // РИСУЕМ ЛИНИИ
+    //подключаем программу и проверяем
+    if (!karta->program.bind()){
+        qWarning("KARTA. Line. Шейдеры не сбиндились");
+        return;
+    }
+    // устанавливаем место хранения координат
+      karta->program.setAttributeArray(karta->m_vertexAttr, karta->vertices.data(), 3);
+      // активируем массивы
+      karta->program.enableAttributeArray(karta->m_vertexAttr);
+      // зaпихиваем в его программу матрицу ориентации
+      karta->program.setUniformValue(karta->m_MVPmatrix, MVPM);
+      // устанавливаем цвет линий
+      glColor3i(0,255,0);
+      //glLineWidth(10);
+      // рисуем линии
+      glDrawArrays(GL_LINES,0,karta->vertices.size()/3);
+      // деактивируем массивы
+      karta->program.disableAttributeArray(karta->m_vertexAttr);
+      // очищаем программу
+      karta->program.release();
+
+      //РИСУЕМ СФЕРЫ
+      m_shphere->setPerspective();   // устанавливаем режим рисования сфер в перспективной проекции
+      m_shphere->init();             // bind program
+      m_shphere->m_program->setUniformValue(m_shphere->m_matrixUniform, MVPM);
+      m_shphere->m_program->setUniformValue("PMi", PMi);                          // TODO вынести в класс шфер
+      m_shphere->m_program->setUniformValue("MVM", MVM);
+      m_shphere->m_program->setUniformValue("MVPMi", MVPMi);
+      m_shphere->m_program->setUniformValue("viewport",viewport);
+
+      //shpheres->draw();
+      m_shphere->m_program->setAttributeArray(m_shphere->m_vertexAttr, karta->vertices.data(), 3);
+      //m_shphere->m_program->setAttributeArray(m_shphere->m_colorAttr, karta->m_colors.data(), 3);
+      m_shphere->m_program->setUniformValue("R",m_shphere->radius);
+      m_shphere->m_program->setUniformValue("maxpointsize",m_shphere->maxpointsize);
+      // активируем массивы
+      m_shphere->m_program->enableAttributeArray(m_vertexAttr);
+      //m_shphere->m_program->enableAttributeArray(m_colorAttr);
+      // устанавливаем цвет шфер
+      glColor3i(255,0,0);
+      // рисуем точки
+      glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);   // говорим что будут меняться размеры точек в шейдере
+      glDrawArrays(GL_POINTS,0,karta->vertices.size()/3);
+      glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+      // деактивируем массивы
+      m_shphere->m_program->disableAttributeArray(m_vertexAttr);
+      m_shphere->m_program->disableAttributeArray(m_colorAttr);
+
+      m_shphere->drop();    // release program
+
+      //РИСУЕМ ТЕКСТ
+      //m_text->font=QFont::Bold;
+      //m_text->pen=
+      m_text->set();
+      for (int i=0;i<karta->captions.size();i++) {
+          m_text->drawO(MVPM,karta->captions[i],QVector3D(karta->vertices[i*3],karta->vertices[(i*3)+1],karta->vertices[(i*3)+2]));
+      }
+      m_text->reset();
 }
 
 void Scene::resizeGL(int w, int h){

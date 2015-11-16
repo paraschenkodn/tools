@@ -1,6 +1,9 @@
 #ifndef KARTA_H
 #define KARTA_H
 
+#include "shphere.h"
+#include "text.h"
+
 #include <QOpenGLTexture>
 #include <QOpenGLShaderProgram>  // объявляем для передачи шейдерных программ в объект
 
@@ -8,6 +11,8 @@ class Karta
 {
 public:
   Karta();
+  ~Karta();
+
   void set();
   void draw(); // рисуем карту
   void reset();
@@ -17,12 +22,15 @@ public:
   std::vector<float> texCoord; // координаты текстуры
   QVector<QString> captions; // список названий
 
-  QOpenGLShaderProgram program;
+  QOpenGLShaderProgram program; // шейдер рисования линий
   int m_vertexAttr;
   int m_colorAttr;
   int m_texAttr;
   int m_texUniform;
   int m_MVPmatrix;
+
+  shphere *shpheres;
+  Text *texts;
 };
 
 #endif // KARTA_H

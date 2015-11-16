@@ -20,8 +20,8 @@ SOURCES += main.cpp\
     shphere.cpp \
     text.cpp \
     mapbuilder.cpp \
-    buildermap.cpp \
-    karta.cpp
+    karta.cpp \
+    test.cpp
 
 HEADERS  += mainwindow.h \
     scene.h \
@@ -30,8 +30,8 @@ HEADERS  += mainwindow.h \
     shphere.h \
     text.h \
     mapbuilder.h \
-    buildermap.h \
-    karta.h
+    karta.h \
+    test.h
 
 FORMS    += mainwindow.ui
 

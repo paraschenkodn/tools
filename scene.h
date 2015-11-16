@@ -28,13 +28,30 @@ public:
 
   QVector4D viewport;
 
+  // примитивы
+  Triangle *m_triangle;
+  shphere *m_shphere;
+  pointsofsphere *spherepoints;
+  Text *m_text;
+  Karta *karta;
+
+  // матрицы преобразований
+  QMatrix4x4 LMM; // Local Model matrix (делает преобразования в локальных координатах объекта, для одного объекта их может быть несколько для разных частей объекта)
+  QMatrix4x4 MM; // Model matrix (выносит координаты объекта в координаты пространства сцены,
+                //выполняется в следующем порядке - масштабирование, поворот, перенос)
+                // TranslationMatrix * RotationMatrix * ScaleMatrix * OriginalVector; (в коде это выглядит в обратном порядке)
+  QMatrix4x4 MVM; // ModelView matrix (View matrix)("масштабирует крутит и перемещает весь мир")
+  QMatrix4x4 CameraView; // тоже самое что и MVM, но для использования функции LookAt
+  QMatrix4x4 PM; // Projection matrix // проекционная матрица
+  QMatrix4x4 MVPM; // ModelViewProjection matrix (projection * view * model)
+  // инверсные матрицы
+  QMatrix4x4 PMi;
+  QMatrix4x4 MVPMi;
+
 private:
   void initializeGL();
   void paintGL();
   void paintDM(); // рисование в режиме разработчика
-  void paintKarta(); // рисование в режиме построения карты (InterNet-Router-SubNet-LAN-Node)
-  void paintFlatMap(); // рисование плоской карты
-  void paintSphereMap(); // рисование сферической карты
   void resizeGL(int w, int h);
 
   // определяем метод изменяющий координаты положения треугольника
@@ -60,24 +77,7 @@ private:
   void setCameraInfo();  // формируем и посылаем текст для отображения параметров в главном окне
   // енд камера
 
-  Triangle *m_triangle;
-  QOpenGLShaderProgram m_program;
-  //QVector<QOpenGLShaderProgram *> m_program;
-  shphere *m_shphere;
-  pointsofsphere *spherepoints;
-  Text *m_text;
-  Karta *karta;
-
-  MapBuilder *buildermap;   // класс картостроителя
-
   void setFigureInfo(); // формируем и посылаем текст для отображения параметров в главном окне
-
-  // создаём идентификаторы для обращения к шейдерным переменным
-  int m_vertexAttr;
-  int m_colorAttr;
-  int m_matrixUniform;
-  int m_texAttr;
-  int m_texUniform;
 
   QTimer m_timer;
   int m_angle; // текущий угол поворота
@@ -88,6 +88,22 @@ private:
 
   bool perspective;  // признак рисования в перспективной или в ортогональной проекции
   int paintMode; // режим рисования
+
+  // ДВИЖОК РИСОВАНИЯ КАРТЫ
+  MapBuilder *buildermap;   // класс картостроителя
+  void kartaInit();
+  void paintKarta(); // рисование в режиме построения карты (InterNet-Router-SubNet-LAN-Node)
+  void paintFlatMap(); // рисование плоской карты
+  void paintSphereMap(); // рисование сферической карты
+  QOpenGLShaderProgram m_program;   // шейдерная программа рисования линий
+  QVector<QOpenGLShaderProgram *> programs;
+  // создаём идентификаторы для обращения к шейдерным переменным
+  int m_vertexAttr;
+  int m_colorAttr;
+  int m_matrixUniform;
+  int m_texAttr;
+  int m_texUniform;
+
 public slots:
   // устанавливаем признак рисования в перспективной или ортогональной проекции
   void setPerspective(int _switch);
