@@ -55,21 +55,21 @@ public:
       Vector3f mdir =  q.applyToVector(Vector3f(0,0,-1));
       mdir.normalize();
       pos += mdir*dist;
-    };
+    }
 
     void moveLR(float dist)
     {
       Vector3f mdir =  q.applyToVector(Vector3f(1,0,0));
       mdir.normalize();
       pos += mdir*dist;
-    };
+    }
 
     void moveUD(float dist)
     {
       Vector3f mdir =  q.applyToVector(Vector3f(0,1,0));
       mdir.normalize();
       pos += mdir*dist;
-    };
+    }
 
 };
 
