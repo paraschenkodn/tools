@@ -5,7 +5,9 @@
 Scene::Scene(QWidget *parent) :
     QOpenGLWidget (parent),
     step(0.01f), // шаг сдвига фигур
-    m_angle(0),
+    angle_x(0),
+    angle_y(0),
+    angle_z(0),
     perspective(true),
     paintMode(1)
 {
@@ -31,7 +33,7 @@ Scene::Scene(QWidget *parent) :
   cameraUp=QVector3D(0.0f,1.0f,0.0f);
   cameraFocusAngle=90;                // устанавливаем начальный угол проекции
 
-  buildermap=new MapBuilder();
+  mbuilder=new MapBuilder();
 }
 
 Scene::~Scene()
@@ -43,7 +45,7 @@ delete m_shphere;
 delete m_text;
 delete karta;
 doneCurrent();
-//delete buildermap;
+//delete mbuilder;
 }
 
 void Scene::initializeGL() {
@@ -83,7 +85,7 @@ void Scene::initializeGL() {
     // тект
     m_text =new Text();
 
-    setCameraInfo(); // формируем и посылаем текст для отображения параметров в главном окне
+    setCamera(); // усанавливаем параметры камеры
     setFigureInfo(); //
 
     // karta
@@ -133,9 +135,7 @@ void Scene::paintDM()
   // изменяем масштаб фигуры (увеличиваем)
   ///MVM.scale(10.0f);  // отрицательное число переворачивает проекцию // влияет только на ортогональную проекцию // убивает Шферы
   // указываем угол поворота и ось поворота смотрящую из центра координат к точке x,y,z,
-  MVM.rotate(m_angle,0.0f,1.0f,0.0f);  // поворот вокруг оси центра координат
-  CameraView.setToIdentity();
-  CameraView.lookAt(cameraEye,cameraCenter,cameraUp); // установка камеры (матрицы трансфрмации)
+  //MVM.rotate(angle_z,0.0f,1.0f,0.0f);  // поворот вокруг оси центра координат
   MVM=CameraView*MVM;  // получаем матрицу трансформации итогового вида
   MVPM=PM*MVM;
 
@@ -184,9 +184,7 @@ void Scene::paintKarta()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     PM.setToIdentity();
     PM.perspective(cameraFocusAngle,ratio,0.1f,100.0f);  // glFrustum( xmin, xmax, ymin, ymax, near, far)  // gluPerspective(fovy, aspect, near, far)
-    //MVM.rotate(m_angle,0.0f,1.0f,0.0f);  // поворот вокруг оси центра координат
-    CameraView.setToIdentity();
-    CameraView.lookAt(cameraEye,cameraCenter,cameraUp); // установка камеры (матрицы трансфрмации)
+    //MVM.rotate(angle_z,0.0f,1.0f,0.0f);  // поворот вокруг оси центра координат
     MVM=CameraView; //*MVM;  // получаем матрицу трансформации итогового вида
     MVPM=PM*MVM;
 
@@ -200,18 +198,24 @@ void Scene::paintKarta()
         qDebug() << "MVPMi не конвертится";
 
 
-    if (buildermap->currentmap==FLAT_MAP) paintFlatMap();
+    if (mbuilder->currentmap==FLAT_MAP) paintFlatMap();
 }
 
 void Scene::paintFlatMap()
 {
   //проверяем, готовы ли данные, если да, то копируем для отображения
-  if (buildermap->newmapbuild)  { /// TODO Перевести в сигнал  (и в модуль карты)
-      buildermap->m_mutex.lock();
-      karta->vertices.assign(buildermap->vertices.begin(),buildermap->vertices.end()); // copy vertices
-      karta->captions=buildermap->captions; // copy captions
-      buildermap->newmapbuild=false; // забрали карту, готовьте новую
-      buildermap->m_mutex.unlock();
+  if (mbuilder->newmapbuild)  { /// TODO Перевести в сигнал  (и в модуль карты)
+      mbuilder->m_mutex.lock();
+      karta->vertices.assign(mbuilder->vertices.begin(),mbuilder->vertices.end()); // copy vertices
+      karta->captions=mbuilder->captions; // copy captions
+      karta->m_colors.resize(mbuilder->vertices.size());   //
+      for (uint i=0;i<karta->m_colors.size();i+=3) {
+          karta->m_colors[i]=1.0f;
+          karta->m_colors[i+1]=0.0f;
+          karta->m_colors[i+2]=0.0f;
+      }
+      mbuilder->newmapbuild=false; // забрали карту, готовьте новую
+      mbuilder->m_mutex.unlock();
     }
 
   //karta->draw();
@@ -249,21 +253,19 @@ void Scene::paintFlatMap()
 
       //shpheres->draw();
       m_shphere->m_program->setAttributeArray(m_shphere->m_vertexAttr, karta->vertices.data(), 3);
-      //m_shphere->m_program->setAttributeArray(m_shphere->m_colorAttr, karta->m_colors.data(), 3);
+      m_shphere->m_program->setAttributeArray(m_shphere->m_colorAttr, karta->m_colors.data(), 3);
       m_shphere->m_program->setUniformValue("R",m_shphere->radius);
       m_shphere->m_program->setUniformValue("maxpointsize",m_shphere->maxpointsize);
       // активируем массивы
-      m_shphere->m_program->enableAttributeArray(m_vertexAttr);
-      //m_shphere->m_program->enableAttributeArray(m_colorAttr);
-      // устанавливаем цвет шфер
-      glColor3i(255,0,0);
+      m_shphere->m_program->enableAttributeArray(m_shphere->m_vertexAttr);
+      m_shphere->m_program->enableAttributeArray(m_shphere->m_colorAttr);
       // рисуем точки
       glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);   // говорим что будут меняться размеры точек в шейдере
       glDrawArrays(GL_POINTS,0,karta->vertices.size()/3);
       glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
       // деактивируем массивы
-      m_shphere->m_program->disableAttributeArray(m_vertexAttr);
-      m_shphere->m_program->disableAttributeArray(m_colorAttr);
+      m_shphere->m_program->disableAttributeArray(m_shphere->m_vertexAttr);
+      m_shphere->m_program->disableAttributeArray(m_shphere->m_colorAttr);
 
       m_shphere->drop();    // release program
 
@@ -355,12 +357,12 @@ void Scene::setPaintMode(int mode)
 
 void Scene::buildNewMap()
 {
-    buildermap->newmap(true);   //false - добавка к существующей, true - построение новой с нуля
+    mbuilder->newmap(true);   //false - добавка к существующей, true - построение новой с нуля
 }
 
 void Scene::addMap()
 {
-    buildermap->newmap(false);   //false - добавка к существующей, true - построение новой с нуля
+    mbuilder->newmap(false);   //false - добавка к существующей, true - построение новой с нуля
 }
 
 void Scene::keyPressEvent(QKeyEvent *event)
@@ -388,12 +390,28 @@ void Scene::keyPressEvent(QKeyEvent *event)
           m_shphere->sety0(m_shphere->m_y0-step);
       break;
   case Qt::Key_W:
-      m_triangle->setz0(m_triangle->m_z0-step); // - от нас
-      m_shphere->setz0(m_shphere->m_z0-step);
+      --angle_x;
+      if (angle_x<0) angle_x=359;
     break;
   case Qt::Key_S:
-      m_triangle->setz0(m_triangle->m_z0+step); // + к нам
-      m_shphere->setz0(m_shphere->m_z0+step);
+      ++angle_x;
+      if (angle_x>=360) angle_x=0;
+    break;
+  case Qt::Key_A:
+      --angle_y;
+      if (angle_y<0) angle_y=359;
+    break;
+  case Qt::Key_D:
+      ++angle_y;
+      if (angle_y>=360) angle_y=0;
+    break;
+  case Qt::Key_Q:
+        --angle_z;
+        if (angle_z<0) angle_z=359;
+    break;
+  case Qt::Key_E:
+        ++angle_z;
+        if (angle_z>=360) angle_z=0;
     break;
     case Qt::Key_M:
         m_shphere->radius=m_shphere->radius+0.001;
@@ -411,14 +429,6 @@ void Scene::keyPressEvent(QKeyEvent *event)
           m_shphere->setdist(m_shphere->m_dist-0.004);
         }
       break;
-  case Qt::Key_A:
-        --m_angle;
-        if (m_angle<0) m_angle=359;
-    break;
-  case Qt::Key_D:
-        ++m_angle;
-        if (m_angle>=360) m_angle=0;
-    break;
   case Qt::Key_I: // уменьшаем угол перспективы камеры min=10 // TODO ещё по идее надо отодвигать камеру, чтобы пирамида охватывала сцену
       if (cameraFocusAngle>10) --cameraFocusAngle;
     break;
@@ -431,7 +441,7 @@ void Scene::keyPressEvent(QKeyEvent *event)
     default:
       break;
     }
-  setCameraInfo();
+  setCamera();
   setFigureInfo();
   update();
 }
@@ -454,20 +464,23 @@ void Scene::mouseMoveEvent(QMouseEvent *event)
 void Scene::wheelEvent(QWheelEvent *event)
 { // шаг колеса обычно 120 едениц, 1 еденица это 1/8 градуса, значит 1 шаг = 15 градусам.
   // мы будем считать в еденицах (некоторые драйвера мыши дают точность больше, т.е. меньше 120 за такт)
-
-  if (!event->isAccepted()) {
-      //camEyePos += event->delta();
-
-      /*if (camEyePos < -8 * 120)
-          camEyePos = -8 * 120;
-      if (camEyePos > 10 * 120)
-          camEyePos = 10 * 120;//*/
-      //event->accept();
-    }
-  // move to new position by step 120/10000 пока только по оси Z (-delta - значит крутим на себя)
+// move to new position by step 120/10000 пока только по оси Z (-delta - значит крутим на себя)
 cameraEye=cameraEye+QVector3D(0.0f,0.0f,((float)event->angleDelta().y()/10000));
 cameraCenter=cameraCenter+QVector3D(0.0f,0.0f,((float)event->angleDelta().y()/10000));
-setCameraInfo();
+setCamera();
+}
+
+void Scene::setCamera() {
+    CameraView.setToIdentity();
+    CameraView.lookAt(cameraEye,cameraCenter,cameraUp); // установка камеры (матрицы трансфрмации)
+    //CameraView.translate(-cameraCenter);
+    //CameraView.translate(cameraEye);
+    CameraView.rotate(angle_x,1.0f,0.0f,0.0f);            // поворот камеры вокруг оси
+    CameraView.rotate(angle_y,0.0f,1.0f,0.0f);            // поворот камеры вокруг оси
+    CameraView.rotate(angle_z,0.0f,0.0f,1.0f);            // поворот камеры вокруг оси
+    //CameraView.translate(-cameraEye);
+    //CameraView.translate(cameraCenter);
+    setCameraInfo();
 }
 
 void Scene::setCameraInfo()
@@ -481,7 +494,7 @@ void Scene::setCameraInfo()
 
 void Scene::setFigureInfo()
 {
-    QString text=m_triangle->getFigureInfo()+", "+m_shphere->getFigureInfo()+", Угол поворота="+QString().setNum(m_angle)+"°";
+    QString text=m_triangle->getFigureInfo()+", "+m_shphere->getFigureInfo()+", Угол поворота z="+QString().setNum(angle_z)+"°";
     emit setFiguresInfo(text);
     text="M, N - изменение фигуры. Radius="+QString().setNum(m_shphere->radius);
     emit setFiguresInfo2(text);
@@ -489,8 +502,8 @@ void Scene::setFigureInfo()
 
 void Scene::slotAnimation()
 {
-  ///++m_angle; // поворот на 1 градус?
-  ///if (m_angle>=360) m_angle=0;
+  ///++angle_z; // поворот на 1 градус?
+  ///if (angle_z>=360) angle_z=0;
   //m_triangle->setx0(m_triangle->m_x0-step);
   update();
 }

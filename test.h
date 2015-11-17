@@ -6,7 +6,7 @@ class Test
 {
 public:
     Test();
-    testinit();
+    void testinit();
 };
 
 #endif // TEST_H

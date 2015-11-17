@@ -174,10 +174,10 @@ void MapBuilder::fmapToVertices() // сброс данных в координа
     int r, c;
     for (int i=0;i<pairs.size();i++) {
         getpointfmap(pairs[i],r,c);
-        vertices[i*3]=(r-offset)*gridStep; //x
-        vertices[(i*3)+1]=(c-offset)*gridStep; //y
+        vertices[i*3]=(c-offset)*gridStep; //x - это колонка  (единица по координатной сетке это 1 gridStep в системе координат)
+        vertices[(i*3)+1]=(-r)*gridStep; //y - это строка
         vertices[(i*3)+2]=0; //z
-        // если точка уже была, то у неё нет надписи, чтобы не отображалась дважды...
+        // если точка уже была, то у неё не должно быть надписи, чтобы не отображалась дважды...
         if (pairs.indexOf(pairs[i])!=i) {   // повторение точки
             captions[i]="";
         }
@@ -235,9 +235,9 @@ void MapBuilder::parserTRT()
 bool MapBuilder::getpointfmap(QString &data, int &row, int &col)
 {
     int tmp;
-    for (int i=0;i<fmap.size();i++)
+    for (int i=0;i<fmap.size();i++) // проверяем размер по индексу строк
     {
-        tmp=fmap[i].indexOf(data);
+        tmp=fmap[i].indexOf(data);  // это индекс колонки
         if (tmp!=-1)
         {
             col=tmp;

@@ -12,5 +12,7 @@
         <file>Shaders/vShphereOrtoPro.glsl</file>
         <file>Shaders/fTextO.glsl</file>
         <file>Shaders/vTextO.glsl</file>
+        <file>Shaders/fShphereOrtoPro2.glsl</file>
+        <file>Shaders/vShphereOrtoPro2.glsl</file>
     </qresource>
 </RCC>

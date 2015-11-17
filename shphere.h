@@ -37,10 +37,9 @@ public:
     void setdist(float dist);
     QString getFigureInfo();
 
-private:
     std::vector<float> m_vertices; //создаём вектор (контейнер хранения) координат вершин
     std::vector<float> m_colors; //создаём вектор (контейнер хранения) координат цветов точек которые рисуем
-
+private:
     void initVertices();
     void initColors();      // инициализация вектора цветов
 };

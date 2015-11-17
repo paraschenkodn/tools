@@ -72,15 +72,19 @@ private:
   QVector3D cameraEye;
   QVector3D cameraCenter;
   QVector3D cameraUp;
+  QQuaternion cameraOrientation; // итоговый вектор ориентации камеры
   float cameraFocusAngle;
   //int camEyePos; // позиция камеры () // + control of board??
+  void setCamera();  // установка параметров матрицы CameraView
   void setCameraInfo();  // формируем и посылаем текст для отображения параметров в главном окне
+  int angle_x; // текущий угол поворота камеры по X (матрицы поворота CameraView, она же ModelView)
+  int angle_y; // текущий угол поворота по Y
+  int angle_z; // текущий угол поворота по Z
   // енд камера
 
   void setFigureInfo(); // формируем и посылаем текст для отображения параметров в главном окне
 
   QTimer m_timer;
-  int m_angle; // текущий угол поворота
 
   void setLights();
   void setStates();
@@ -90,7 +94,7 @@ private:
   int paintMode; // режим рисования
 
   // ДВИЖОК РИСОВАНИЯ КАРТЫ
-  MapBuilder *buildermap;   // класс картостроителя
+  MapBuilder *mbuilder;   // класс картостроителя
   void kartaInit();
   void paintKarta(); // рисование в режиме построения карты (InterNet-Router-SubNet-LAN-Node)
   void paintFlatMap(); // рисование плоской карты

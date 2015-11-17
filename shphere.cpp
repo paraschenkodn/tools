@@ -41,8 +41,8 @@ shphere::shphere():
     //setOrthogonal(); // инициализируем на всякий случай, переопределяется в Scene::initializeGL()
 
     //добавляем шейдеры в программу для перспективной проеции
-    //vShader.compileSourceFile(":/Shaders/vShphereOrtoPro.glsl");
-    //fShader.compileSourceFile(":/Shaders/fShphereOrtoPro.glsl");
+    //vShader.compileSourceFile(":/Shaders/vShphereOrtoPro2.glsl");
+    //fShader.compileSourceFile(":/Shaders/fShphereOrtoPro2.glsl");
     vShader.compileSourceFile(":/Shaders/vShphereProection.glsl");
     fShader.compileSourceFile(":/Shaders/fShphereProection.glsl");
     m_programP.addShader(&vShader);

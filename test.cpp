@@ -6,7 +6,7 @@ Test::Test()
 
 }
 
-Test::testinit()
+void Test::testinit()
 {
     ;//m_triangle->test
 }

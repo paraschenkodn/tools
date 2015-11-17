@@ -21,7 +21,8 @@ SOURCES += main.cpp\
     text.cpp \
     mapbuilder.cpp \
     karta.cpp \
-    test.cpp
+    test.cpp \
+    cameraquat.cpp
 
 HEADERS  += mainwindow.h \
     scene.h \
@@ -31,7 +32,8 @@ HEADERS  += mainwindow.h \
     text.h \
     mapbuilder.h \
     karta.h \
-    test.h
+    test.h \
+    cameraquat.h
 
 FORMS    += mainwindow.ui
 
