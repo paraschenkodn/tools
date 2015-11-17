@@ -33,6 +33,9 @@ Scene::Scene(QWidget *parent) :
   cameraUp=QVector3D(0.0f,1.0f,0.0f);
   cameraFocusAngle=90;                // устанавливаем начальный угол проекции
 
+  camera.pos=QVector3D(0.0f,0.0f,0.5f);
+  mouse_sensitivity=1.0f;
+
   mbuilder=new MapBuilder();
 }
 
@@ -369,49 +372,52 @@ void Scene::keyPressEvent(QKeyEvent *event)
 {
   switch (event->key()) {
     case Qt::Key_Up:
-      if (paintMode==TEST_MODE) {
-          m_triangle->sety0(m_triangle->m_y0+step);
-          m_shphere->sety0(m_shphere->m_y0+step);
-      }
-      else { //KARTA_MODE
-          ;
-      }
-      break;
-    case Qt::Key_Left:
-          m_triangle->setx0(m_triangle->m_x0-step);
-          m_shphere->setx0(m_shphere->m_x0-step);
-      break;
-    case Qt::Key_Right:
-          m_triangle->setx0(m_triangle->m_x0+step);
-          m_shphere->setx0(m_shphere->m_x0+step);
+      camera.moveUD(step);
       break;
     case Qt::Key_Down:
-          m_triangle->sety0(m_triangle->m_y0-step);
-          m_shphere->sety0(m_shphere->m_y0-step);
+      camera.moveUD(-step);
+      break;
+    case Qt::Key_Left:
+      camera.moveLR(-step);
+      break;
+    case Qt::Key_Right:
+      camera.moveLR(step);
       break;
   case Qt::Key_W:
       --angle_x;
       if (angle_x<0) angle_x=359;
+      //camera.turnOX(-1.0f);
+      camera.turnUD(-1.0f);
     break;
   case Qt::Key_S:
       ++angle_x;
       if (angle_x>=360) angle_x=0;
+      //camera.turnOX(+1.0f);
+      camera.turnUD(+1.0f);
     break;
   case Qt::Key_A:
       --angle_y;
       if (angle_y<0) angle_y=359;
+      //camera.turnOY(-1.0f);
+      camera.turnLR(-1.0f);
     break;
   case Qt::Key_D:
       ++angle_y;
       if (angle_y>=360) angle_y=0;
+      //camera.turnOY(+1.0f);
+      camera.turnLR(+1.0f);
     break;
   case Qt::Key_Q:
         --angle_z;
         if (angle_z<0) angle_z=359;
+        //camera.turnOZ(-1.0f);
+        camera.twirl(-1.0f);
     break;
   case Qt::Key_E:
         ++angle_z;
         if (angle_z>=360) angle_z=0;
+        //camera.turnOZ(+1.0f);
+        camera.twirl(+1.0f);
     break;
     case Qt::Key_M:
         m_shphere->radius=m_shphere->radius+0.001;
@@ -448,7 +454,6 @@ void Scene::keyPressEvent(QKeyEvent *event)
 
 void Scene::mousePressEvent(QMouseEvent *event)
 {
-  if (event) step=step;
 }
 
 void Scene::mouseReleaseEvent(QMouseEvent *event)
@@ -458,7 +463,9 @@ void Scene::mouseReleaseEvent(QMouseEvent *event)
 
 void Scene::mouseMoveEvent(QMouseEvent *event)
 {
-  if (event) step=step;
+  if (event->buttons() & Qt::LeftButton) {
+     event->;
+  }
 }
 
 void Scene::wheelEvent(QWheelEvent *event)
@@ -467,11 +474,12 @@ void Scene::wheelEvent(QWheelEvent *event)
 // move to new position by step 120/10000 пока только по оси Z (-delta - значит крутим на себя)
 cameraEye=cameraEye+QVector3D(0.0f,0.0f,((float)event->angleDelta().y()/10000));
 cameraCenter=cameraCenter+QVector3D(0.0f,0.0f,((float)event->angleDelta().y()/10000));
+camera.moveFB((float)event->angleDelta().y()/10000);
 setCamera();
 }
 
 void Scene::setCamera() {
-    CameraView.setToIdentity();
+    /*CameraView.setToIdentity();
     CameraView.lookAt(cameraEye,cameraCenter,cameraUp); // установка камеры (матрицы трансфрмации)
     //CameraView.translate(-cameraCenter);
     //CameraView.translate(cameraEye);
@@ -479,7 +487,13 @@ void Scene::setCamera() {
     CameraView.rotate(angle_y,0.0f,1.0f,0.0f);            // поворот камеры вокруг оси
     CameraView.rotate(angle_z,0.0f,0.0f,1.0f);            // поворот камеры вокруг оси
     //CameraView.translate(-cameraEye);
-    //CameraView.translate(cameraCenter);
+    //CameraView.translate(cameraCenter);//*/
+
+    CameraView.setToIdentity();
+    QVector3D dir = camera.q.rotatedVector(QVector3D(0,0,-1))+camera.pos;
+    QVector3D top = camera.q.rotatedVector(QVector3D(0,1,0));
+    CameraView.lookAt(camera.pos,dir,top); // установка камеры (матрицы трансфрмации)
+
     setCameraInfo();
 }
 

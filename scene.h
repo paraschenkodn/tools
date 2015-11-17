@@ -8,6 +8,7 @@
 #include "text.h"
 #include "mapbuilder.h"
 #include "karta.h"
+#include "cameraquat.h"
 
 #include <QOpenGLShaderProgram>
 #include <QKeyEvent>
@@ -34,6 +35,7 @@ public:
   pointsofsphere *spherepoints;
   Text *m_text;
   Karta *karta;
+  CameraQuat camera;
 
   // матрицы преобразований
   QMatrix4x4 LMM; // Local Model matrix (делает преобразования в локальных координатах объекта, для одного объекта их может быть несколько для разных частей объекта)
@@ -55,6 +57,7 @@ private:
   void resizeGL(int w, int h);
 
   // определяем метод изменяющий координаты положения треугольника
+  float mouse_sensitivity;
   void keyPressEvent(QKeyEvent *event);
   void mousePressEvent(QMouseEvent *event);      // работка с мышью, переопределяем функции обработки сообщений мыши (нажатие кнопок)
   void mouseReleaseEvent(QMouseEvent *event);    // переопределяем функции обработки сообщений мыши (отпускание кнопки)
