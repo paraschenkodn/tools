@@ -56,9 +56,10 @@ private:
   void paintDM(); // рисование в режиме разработчика
   void resizeGL(int w, int h);
 
-  // определяем метод изменяющий координаты положения треугольника
+  // определяем метод изменяющий координаты положения камеры
   float mouse_sensitivity;
-  void keyPressEvent(QKeyEvent *event);
+  QPointF pixelPosToViewPos(const QPointF &p);
+  void keyPressEvent(QKeyEvent *event);         // управление с клавиатуры
   void mousePressEvent(QMouseEvent *event);      // работка с мышью, переопределяем функции обработки сообщений мыши (нажатие кнопок)
   void mouseReleaseEvent(QMouseEvent *event);    // переопределяем функции обработки сообщений мыши (отпускание кнопки)
   ///*********

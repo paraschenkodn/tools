@@ -386,26 +386,26 @@ void Scene::keyPressEvent(QKeyEvent *event)
   case Qt::Key_W:
       --angle_x;
       if (angle_x<0) angle_x=359;
-      //camera.turnOX(-1.0f);
-      camera.turnUD(-1.0f);
+      camera.turnOX(-1.0f);
+      //camera.turnUD(-1.0f);
     break;
   case Qt::Key_S:
       ++angle_x;
       if (angle_x>=360) angle_x=0;
-      //camera.turnOX(+1.0f);
-      camera.turnUD(+1.0f);
+      camera.turnOX(+1.0f);
+      //camera.turnUD(+1.0f);
     break;
   case Qt::Key_A:
       --angle_y;
       if (angle_y<0) angle_y=359;
-      //camera.turnOY(-1.0f);
-      camera.turnLR(-1.0f);
+      camera.Rotate_Position(-1.0f,0.0f,1.0f,0.0f);
+      //camera.turnLR(-1.0f);
     break;
   case Qt::Key_D:
       ++angle_y;
       if (angle_y>=360) angle_y=0;
-      //camera.turnOY(+1.0f);
-      camera.turnLR(+1.0f);
+      camera.Rotate_Position(+1.0f,0.0f,1.0f,0.0f);
+      //camera.turnLR(+1.0f);
     break;
   case Qt::Key_Q:
         --angle_z;
@@ -452,8 +452,21 @@ void Scene::keyPressEvent(QKeyEvent *event)
   update();
 }
 
+// ArcBall Rotation
+// http://pmg.org.ru/nehe/nehe48.htm
+// масштабируем, координаты мыши из диапазона [0…ширина], [0...высота] в диапазон [-1...1], [1...-1]
+// (запомните, что мы меняем знак координаты Y, чтобы получить корректный результат в OpenGL)
+QPointF Scene::pixelPosToViewPos(const QPointF& p)
+{
+    return QPointF(2.0 * float(p.x()) / width() - 1.0,
+                   1.0 - 2.0 * float(p.y()) / height());
+}
+
 void Scene::mousePressEvent(QMouseEvent *event)
 {
+    if (event->buttons() & Qt::LeftButton) {
+       camera.push(pixelPosToViewPos(event->localPos()));
+    }
 }
 
 void Scene::mouseReleaseEvent(QMouseEvent *event)
@@ -464,7 +477,8 @@ void Scene::mouseReleaseEvent(QMouseEvent *event)
 void Scene::mouseMoveEvent(QMouseEvent *event)
 {
   if (event->buttons() & Qt::LeftButton) {
-     event->;
+     camera.moveByMouse(pixelPosToViewPos(event->localPos()),QQuaternion());
+     setCamera();
   }
 }
 
@@ -479,16 +493,6 @@ setCamera();
 }
 
 void Scene::setCamera() {
-    /*CameraView.setToIdentity();
-    CameraView.lookAt(cameraEye,cameraCenter,cameraUp); // установка камеры (матрицы трансфрмации)
-    //CameraView.translate(-cameraCenter);
-    //CameraView.translate(cameraEye);
-    CameraView.rotate(angle_x,1.0f,0.0f,0.0f);            // поворот камеры вокруг оси
-    CameraView.rotate(angle_y,0.0f,1.0f,0.0f);            // поворот камеры вокруг оси
-    CameraView.rotate(angle_z,0.0f,0.0f,1.0f);            // поворот камеры вокруг оси
-    //CameraView.translate(-cameraEye);
-    //CameraView.translate(cameraCenter);//*/
-
     CameraView.setToIdentity();
     QVector3D dir = camera.q.rotatedVector(QVector3D(0,0,-1))+camera.pos;
     QVector3D top = camera.q.rotatedVector(QVector3D(0,1,0));
