@@ -13,7 +13,8 @@ public:
     CameraQuat();
 
     QVector3D pos;
-    QQuaternion q;  // квартерион вращения
+    QQuaternion q;  // кватернион вращения
+    QQuaternion rq; // кватернион вращения позиции камеры
 
     /*void apply(){
       QVector3D dir = q.rotatedVector(QVector3D(0,0,-1))+pos;

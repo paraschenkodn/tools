@@ -6,6 +6,8 @@ CameraQuat::CameraQuat()
 q.setVector(0.0f,0.0f,0.0f);
 q.setScalar(1.0f);
 pos.setX(0.0f);pos.setY(0.0f);pos.setZ(0.0f);
+rq.setVector(0.0f,0.0f,0.0f);
+rq.setScalar(1.0f);
 
 m_angularVelocity=0;
 m_axis = QVector3D(0, 1, 0);            // начальный вектор вращения вдоль оси Y
@@ -13,21 +15,35 @@ m_lastTime = QTime::currentTime();      // зафиксируем текущее
 mouse_sensitivity=1.0f;
 }
 
-void CameraQuat::Rotate_Position(float angle, float x, float y, float z)    // for strafe
+void CameraQuat::Rotate_Position(float angle, float x, float y, float z)
 {
-    /*/
-    //"позиция камеры" - "позиция взгляда(ось вращения будет там куда смотрим)"
-    QVector3D mView = q.rotatedVector(QVector3D(0,0,-1))+pos;
-    QVector3D mPos = -(q.rotatedVector(QVector3D(0,0,-1)));
-    QVector3D top = q.rotatedVector(QVector3D(0,1,0));  // это вращение по y получится, потому используем ориентацию axis
-    QVector3D axis = QVector3D(x,y,z).normalize();
+    //
+  // получаем вектор поворота
+  QVector3D axis = QVector3D(x,y,z); //
+  // получаем обратный вектор, от позиции места куда падает взгляд до позиции камеры.
+  QVector3D mPos = -(q.rotatedVector(QVector3D(0,0,-1)));
+  // делаем квартерион поворота вокруг вектора поворота
+  QQuaternion nq=QQuaternion::fromAxisAndAngle(axis,angle);//*q;
+  // получаем суммирующий квартерион поворота позиции
+  rq=rq*nq;
+  // получаем повёрнутый вектор позиции камеры
+  //QVector3D npos=rq.rotatedVector(mPos);
+  pos=rq.rotatedVector(mPos);
+  // (но вектор взгляда теперь смотрит с новой позиции в сторону)
+  // теперь поворачиваем вектор взгляда (т.е. камеру) к точке просмотра
+  /// TODO (пока )
+  turnLR(angle);
 
-    QQuaternion nq=QQuaternion::fromAxisAndAngle(axis,angle);//*q;
+    //"позиция камеры" - "позиция взгляда(ось вращения будет там куда смотрим)"
+  // получаем вектор
+    QVector3D mView = q.rotatedVector(QVector3D(0,0,-1))+pos;
+
+    QVector3D top = q.rotatedVector(QVector3D(0,1,0));  // это вращение по y получится, потому используем ориентацию axis
 
     QVector3D dir = q.rotatedVector(axis)+pos;  // используем ориентацию axis
     //*/
 
-    //
+    /*/
     //"позиция камеры" - "позиция взгляда(ось вращения будет там куда смотрим)"
     QVector3D mView = q.rotatedVector(QVector3D(0,0,-1))+pos;
     pos.setX( pos.x() - mView.x());
