@@ -289,17 +289,11 @@ void Scene::setStates()
     glEnable(GL_NORMALIZE);
 
     setLights();
-
-    float materialSpecular[] = {0.5f, 0.5f, 0.5f, 1.0f};
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, materialSpecular);
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 32.0f);
 }
 
 void Scene::setLights()
 {
-    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
     //float lightColour[] = {1.0f, 0.9f, 0.9f, 1.0f};
-
     ///glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColour);
 
     float lightDir[] = {1.0f, 1.0f, 1.0f, 0.0f};
@@ -321,12 +315,6 @@ void Scene::defaultStates()
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_LIGHT0);
     glDisable(GL_NORMALIZE);
-
-    // deprecated
-    //glMatrixMode(GL_MODELVIEW);
-    //glPopMatrix();
-    //glMatrixMode(GL_PROJECTION);
-    //glPopMatrix();
 
     glLightModelf(GL_LIGHT_MODEL_LOCAL_VIEWER, 0.0f);
     float defaultMaterialSpecular[] = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -495,10 +483,11 @@ void Scene::setCamera() {
     mscale.scale(1.0f,1.0f,1.0f);
     mrotate.rotate(camera.rq);
     mtranslate.translate(cameraCenter);
-    MVM=mscale*mrotate*mtranslate;
-    //MVM.rotate(camera.rq);  // поворот вокруг оси центра координат
+    //MVM=mscale*mrotate*mtranslate;
+    //MVM=mtranslate*mrotate*mscale;
+    MVM.rotate(camera.rq);  // поворот вокруг оси центра координат
     // получаем вектор переноса, отняв от вектора позиции камеры, вектор позиции взгляда
-    //MVM.translate(-cameraCenter); // переносим по z от "глаз", сдвигаем камеру на минус, т.е. в сторону затылка.
+    MVM.translate(-cameraCenter); // переносим по z от "глаз", сдвигаем камеру на минус, т.е. в сторону затылка.
     // не работает в ортогональной проекции если перенести слишком далеко, за пределы куба отсечения
     // оппа, мы видим передние границы пирамиды отсечения, где всё отсекается (тут-то шейдерным сферам и конец)
     // изменяем масштаб фигуры (увеличиваем)

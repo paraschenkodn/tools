@@ -54,6 +54,14 @@ private:
     void initColors();      // инициализация вектора цветов
     void initTexCoords();  // инициализация текстурных координат
 
+    // grid
+    std::vector<float> vaxises;
+    std::vector<float> vgrid;
+    std::vector<float> caxises;
+    std::vector<float> cgrid;
+    void gridInit(float L, float size);
+    void drawGrid();
+
     QOpenGLTexture *m_texture;
 };
 
