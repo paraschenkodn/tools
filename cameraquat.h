@@ -12,9 +12,10 @@ class CameraQuat
 public:
     CameraQuat();
 
-    QVector3D pos;
+    QVector3D pos;  // позиция камеры (у нас она вначале отстоит по оси Z на +1, направление взгляда будет в сторону -Z)
     QQuaternion q;  // кватернион вращения
     QQuaternion rq; // кватернион вращения позиции камеры
+    QVector3D pView;    // относительная позиция взгляда (у нас она вначале установлена в центр координат, в сторону -Z по оси)
 
     /*void apply(){
       QVector3D dir = q.rotatedVector(QVector3D(0,0,-1))+pos;
@@ -78,8 +79,31 @@ public:
       pos += mdir*dist;
     }
 
-    void strafe(float fi){  // "следящая" камера
-        ;
+    // "следящая" камера
+    QVector3D mStrafe;
+    void moveStrafeCamera(float speed){ // Задаем скорость
+        QVector3D vVector; // Получаем вектор взгляда
+        /*vVector.x = mView.x - mPos.x;
+        vVector.y = mView.y - mPos.y;
+        vVector.z = mView.z - mPos.z;
+
+        vVector.y = 0.0f; // Это запрещает камере подниматься вверх
+        vVector = Normalize(vVector);
+
+        mPos.x += vVector.x * speed;
+        mPos.z += vVector.z * speed;
+        mView.x += vVector.x * speed;
+        mView.z += vVector.z * speed;*/
+    }
+
+    void strafe(float speed){  // "следящая" камера
+        /* // добавим вектор стрейфа к позиции
+        mPos.x += mStrafe.x * speed;
+        mPos.z += mStrafe.z * speed;
+
+         // Добавим теперь к взгляду
+        mView.x += mStrafe.x * speed;
+        mView.z += mStrafe.z * speed;*/
     }
 
     void Rotate_Position(float angle, float x, float y, float z);   // поворот камеры от третьего лица

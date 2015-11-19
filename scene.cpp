@@ -491,7 +491,11 @@ void Scene::setCamera() {
     cameraEye = camera.pos;
     cameraCenter = camera.q.rotatedVector(QVector3D(0,0,-1))+camera.pos;
     cameraUp = camera.q.rotatedVector(QVector3D(0,1,0));
+    // Нормализуем вектор стрейфа
+    //QVector3D vCross = Cross(mView, mPos, mUp);
+    //         camera.mStrafe = Normalize(vCross);
     CameraView.lookAt(camera.pos,cameraCenter,cameraUp); // установка камеры (матрицы трансфрмации)
+    //CameraView.rotate(camera.rq);// поворот от третьего лица
 
     setCameraInfo();
 }
