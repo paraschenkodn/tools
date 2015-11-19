@@ -492,7 +492,7 @@ void Scene::setCamera() {
     QMatrix4x4 mscale;
     QMatrix4x4 mrotate;
     QMatrix4x4 mtranslate;
-    mscale.scale(0.0f,0.0f,0.0f);
+    mscale.scale(1.0f,1.0f,1.0f);
     mrotate.rotate(camera.rq);
     mtranslate.translate(cameraCenter);
     MVM=mscale*mrotate*mtranslate;
