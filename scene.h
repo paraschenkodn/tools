@@ -42,7 +42,7 @@ public:
   QMatrix4x4 MM; // Model matrix (выносит координаты объекта в координаты пространства сцены,
                 //выполняется в следующем порядке - масштабирование, поворот, перенос)
                 // TranslationMatrix * RotationMatrix * ScaleMatrix * OriginalVector; (в коде это выглядит в обратном порядке)
-  QMatrix4x4 MVM; // ModelView matrix (View matrix)("масштабирует крутит и перемещает весь мир")
+  QMatrix4x4 MVM; //WorldView; // ModelView matrix (View matrix)("масштабирует крутит и перемещает весь мир")
   QMatrix4x4 CameraView; // тоже самое что и MVM, но для использования функции LookAt
   QMatrix4x4 PM; // Projection matrix // проекционная матрица
   QMatrix4x4 MVPM; // ModelViewProjection matrix (projection * view * model)

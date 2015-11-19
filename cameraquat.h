@@ -13,9 +13,11 @@ public:
     CameraQuat();
 
     QVector3D pos;  // позиция камеры (у нас она вначале отстоит по оси Z на +1, направление взгляда будет в сторону -Z)
-    QQuaternion q;  // кватернион вращения
-    QQuaternion rq; // кватернион вращения позиции камеры
+    QQuaternion q;  // кватернион вращения - CameraView
+    QQuaternion rq; // кватернион вращения вокруг взгляда камеры   -   WorldView (потом делаем ему translate & rotate)
     QVector3D pView;    // относительная позиция взгляда (у нас она вначале установлена в центр координат, в сторону -Z по оси)
+    QVector3D posView;  // абсолютная позиция взгляда
+    QVector3D camUp;
 
     /*void apply(){
       QVector3D dir = q.rotatedVector(QVector3D(0,0,-1))+pos;
@@ -29,6 +31,9 @@ public:
       /// q=QQuaternion::fromAxisAndAngle(top,fi)*q;  - аналогично двум последующим строкам:
       /// double fi2 = (double)fi*PI/360.0;
       /// q=QQuaternion((float)cos(fi2), top*(float)sin(fi2))*q;
+
+      posView=q.rotatedVector(QVector3D(0.0f,0.0f,-1.0f))+pos;    // точка взгляда
+      camUp==q.rotatedVector(QVector3D(0.0f,1.0f,0.0f));
     }
 
     void turnUD(float fi){                                      // поворот от первого лица вверх вниз

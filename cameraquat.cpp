@@ -9,8 +9,10 @@ pos.setX(0.0f);pos.setY(0.0f);pos.setZ(0.0f);
 rq.setVector(0.0f,0.0f,0.0f);
 rq.setScalar(1.0f);
 
-pos=QVector3D(0.0f,0.0f,1.0f);      //
-pView=QVector3D(0.0f,0.0f,-1.0f);   // ((вектор взгляда)смещение от позиции камеры) позиция взгляда = позиция камеры + смещение
+pos=QVector3D(0.0f,0.0f,0.5f);      //
+pView=QVector3D(0.0f,0.0f,-0.5f);   // ((вектор взгляда)смещение от позиции камеры) позиция взгляда = позиция камеры + смещение
+posView=pos+pView;
+camUp=QVector3D(0.0f,1.0f,0.0f);
 
 m_angularVelocity=0;
 m_axis = QVector3D(0, 1, 0);            // начальный вектор вращения вдоль оси Y
@@ -35,15 +37,29 @@ void CameraQuat::Rotate_Position(float angle, float x, float y, float z)
   //*/ // получаем кватернион поворота позиции камеры
   //*/ rq = QQuaternion::fromAxisAndAngle(m_axis, 180 / PI * delta) * rq;//m_rotation = QQuaternion::fromAxisAndAngle(m_axis, 180 / PI * delta.length()) * m_rotation;
   //**********************************************************************************
+  QQuaternion nq=QQuaternion::fromAxisAndAngle(m_axis,angle); // дополнительное вращение вокруг заданной оси
+  rq = rq * nq; // получаем дополнительный разворот матрицы поворота
+
+  posView=q.rotatedVector(QVector3D(0,0,-1))+pos;    // точка взгляда
+  //posView=posView+speed*rq.rotatedVector(QVector3D(0,0,-1));//поворачиваем точку взгляда и складываем с текущей позицией чтобы получить новую позицию точки взгляда
+  QVector3D oricampos(0.0f,0.0f,1.0f);  // начальная позиция камеры (?нормализованная?)
+  QVector3D campos=rq.rotatedVector(oricampos); // повёрнутая позиция камеры
+  //pos=campos;//+posView;
+  QVector3D oriUp(0.0f,1.0f,0.0f);  // начальная позиция верха
+  //camUp=rq.rotatedVector(oriUp); // повёрнутая позиция верха
+  //turnLR(angle);
+
+
+
   // получаем позицию взгляда - точку вокруг которой строится вращение
-  //QVector3D pView=q.rotatedVector(QVector3D(0,0,-1))+camera.pos;
+  //QVector3D pView=q.rotatedVector(QVector3D(0,0,-1))+pos;
   // теперь нам нужна вертикаль (для вращения вокруг неё по оси Y)
-  m_axis = q.rotatedVector(m_axis)+pos+QVector3D(0,0,-1); // переносим вектор поворота в позицию камеры + смещение
+  //m_axis = q.rotatedVector(m_axis)+pos+QVector3D(0,0,-1); // переносим вектор поворота в позицию камеры + смещение
   /**/ // получаем развернутый по текущему кватерниону угол разворота
-  /**/ //QQuaternion nq;
-  /**/ //m_axis = nq.rotatedVector(m_axis); //m_axis = transformation.rotatedVector(m_axis);
+  /**/
+  /**/ //m_axis = nq.rotatedVector(QVector3D(0,0,-1)); //m_axis = transformation.rotatedVector(m_axis);
   /**/ // получаем кватернион поворота позиции камеры
-  /**/ rq = rq * QQuaternion::fromAxisAndAngle(m_axis, 180 / PI * delta);//m_rotation = QQuaternion::fromAxisAndAngle(m_axis, 180 / PI * delta.length()) * m_rotation;
+  /**/ //rq = rq * QQuaternion::fromAxisAndAngle(m_axis, 180 / PI * delta);//m_rotation = QQuaternion::fromAxisAndAngle(m_axis, 180 / PI * delta.length()) * m_rotation;
   //*************************************************************************************
 }
 
