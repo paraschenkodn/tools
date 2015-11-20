@@ -466,14 +466,19 @@ setCamera();
 }
 
 void Scene::setCamera() {
+    QQuaternion t;
+    t=camera.q*camera.rq;
+
     CameraView.setToIdentity();
-    cameraEye = camera.pos;
-    cameraCenter = camera.q.rotatedVector(QVector3D(0,0,-1))+camera.pos;
+    cameraCenter = camera.q.rotatedVector(QVector3D(0,0,-1))+camera.pos; // старая позиция
+    cameraEye = camera.rq.rotatedVector(QVector3D(0,0,1))+cameraCenter;   // - относительный вектор -QVector3D(0,0,-1)
+
+    cameraCenter = camera.q.rotatedVector(QVector3D(0,0,-1))+camera.pos; //QVector3D(0,0,-1) - это относительный вектор
     cameraUp = camera.q.rotatedVector(QVector3D(0,1,0));
     // Нормализуем вектор стрейфа
     //QVector3D vCross = Cross(mView, mPos, mUp);
     //         camera.mStrafe = Normalize(vCross);
-    CameraView.lookAt(camera.pos,cameraCenter,cameraUp); // установка камеры (матрицы трансфрмации)
+    CameraView.lookAt(cameraEye,cameraCenter,cameraUp); // установка камеры (матрицы трансфрмации)
     //CameraView.rotate(camera.rq);// поворот от третьего лица
 
     MVM.setToIdentity();  // установка начального значения
@@ -482,12 +487,12 @@ void Scene::setCamera() {
     QMatrix4x4 mtranslate;
     mscale.scale(1.0f,1.0f,1.0f);
     mrotate.rotate(camera.rq);
-    mtranslate.translate(cameraCenter);
+    mtranslate.translate(-cameraCenter);
     //MVM=mscale*mrotate*mtranslate;
     //MVM=mtranslate*mrotate*mscale;
-    MVM.rotate(camera.rq);  // поворот вокруг оси центра координат
+    //MVM.rotate(camera.rq);  // поворот вокруг оси центра координат
     // получаем вектор переноса, отняв от вектора позиции камеры, вектор позиции взгляда
-    MVM.translate(-cameraCenter); // переносим по z от "глаз", сдвигаем камеру на минус, т.е. в сторону затылка.
+    //MVM.translate(-cameraCenter); // переносим по z от "глаз", сдвигаем камеру на минус, т.е. в сторону затылка.
     // не работает в ортогональной проекции если перенести слишком далеко, за пределы куба отсечения
     // оппа, мы видим передние границы пирамиды отсечения, где всё отсекается (тут-то шейдерным сферам и конец)
     // изменяем масштаб фигуры (увеличиваем)
