@@ -12,111 +12,141 @@ class CameraQuat
 public:
     CameraQuat();
 
-    QVector3D pos;  // позиция камеры (у нас она вначале отстоит по оси Z на +1, направление взгляда будет в сторону -Z)
-    QQuaternion q;  // кватернион вращения - CameraView
-    QQuaternion rq; // кватернион вращения вокруг взгляда камеры   -   WorldView (потом делаем ему translate & rotate)
-    QVector3D pView;    // относительная позиция взгляда (у нас она вначале установлена в центр координат, в сторону -Z по оси)
-    QVector3D posView;  // абсолютная позиция взгляда
+    QQuaternion q;  // кватернион вращения самой камеры (вид от первого лица)
+    QQuaternion rq; // кватернион вращения вокруг взгляда камеры (вид от третьего лица)
+    // позиция камеры (у нас она вначале отстоит по оси Z на +1, направление взгляда будет в сторону -Z)
+    // у нас вектор позиции отсчитывается от центра координат
+    QVector3D pos;  // перемещения камеры записываются в неё
+    // вектор взгляда, направленный из точки позиции камеры в позицию вида от третьего лица, т.е.
+    // это относительная позиция взгляда (у нас она вначале установлена в центр координат, в сторону -Z по оси)
+    // у нас этот вектор отсчитывается от позиции камеры до точки взгляда
+    QVector3D pView;  // изменяя размер этого вектора изменяем позицию камеры относительно объекта слежения
+    // абсолютная позиция взгляда, является вычисляемой величиной от позиции и вектора взгляда (отсчёт от центра координат)
+    QVector3D posView;
+    // относительный единичный вектор, вычисляемая из кватерниона величина, вектор ориентации камеры вокруг своей оси
     QVector3D camUp;
+    // вектор направления движения камеры, размер вектора - скорость
+    QVector3D speed;
+    // матрица трансформации (самера)
+    QMatrix4x4 CameraView; // наша ModelView matrix
+    bool grounded;  // "заземление". вращение по горизонтали исключительно вокруг вертикальной оси Y
+    bool strated; // режим полёта над заданной плоскостью, камера смотрит вниз, но движение вперёд не изменяет высоту по Y
 
-    /*void apply(){
-      QVector3D dir = q.rotatedVector(QVector3D(0,0,-1))+pos;
-      QVector3D top = q.rotatedVector(QVector3D(0,1,0));
-      gluLookAt(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, top.x, top.y, top.z);
-    }//*/
+    // функция установки точки слежения (например следящая за объектом камера)
+    void setView(const QVector3D &npos){ // передаём абсолютные координаты вектора точки слежения (отсчёт вектора от центра координат)
+      pView=npos-pos;
+      posView=npos;
+    }
+
+    void apply(){ // функция актуализации вектора взгляда камеры после изменения кватернионов (не требуется после изменения самой точки pos)
+      /// TODO сюда можно будет воткнуть критическую секцию
+      // сначала определяем старую точку взгляда относительно смещеной позиции (если камера была сдвинута (а не повёрнута))
+      posView=pos+pView;
+      if (!q.isIdentity()) {  // вычисляем поворот точки взгляда
+         posView = q.rotatedVector(pView)+pos; // новая позиция взгляда
+         camUp = q.rotatedVector(camUp);  // новая позиция верха
+         pView = posView-pos; // фиксируем новый вектор взгляда
+        }
+      if (!rq.isIdentity()) { // вычисляем поворот позиции камеры
+         pos = rq.rotatedVector(-pView)+posView;
+         pView = posView-pos; // фиксируем новый вектор взгляда
+        }
+      CameraView.setToIdentity();
+      CameraView.lookAt(pos,posView,camUp);
+      // позиции и вектор взгляда зафиксированы, проводим обнуление кватернионов
+      q.setVector(0.0f,0.0f,0.0f);
+      q.setScalar(1.0f);
+      rq.setVector(0.0f,0.0f,0.0f);
+      rq.setScalar(1.0f);
+    }
     /*ALL VALUES IN GRAD*/
     void turnLR(float fi){                                  // поворот от первого лица лево-право
-      QVector3D top = q.rotatedVector(QVector3D(0,1,0));
+      QVector3D top;
+      if (grounded) { // если используем режим "зазаемления" то вращаем исключительно перпендикулярно "земле"
+          top = q.rotatedVector(QVector3D(0,1,0));  // относительный вектор вращения
+        }
+      else {
+        camUp = q.rotatedVector(camUp); // корректируем вектор вращения если уже был поворот ???
+        top = camUp;
+        }
       q=QQuaternion::fromAxisAndAngle(top,fi)*q;
       /// q=QQuaternion::fromAxisAndAngle(top,fi)*q;  - аналогично двум последующим строкам:
       /// double fi2 = (double)fi*PI/360.0;
       /// q=QQuaternion((float)cos(fi2), top*(float)sin(fi2))*q;
-
-      posView=q.rotatedVector(QVector3D(0.0f,0.0f,-1.0f))+pos;    // точка взгляда
-      camUp==q.rotatedVector(QVector3D(0.0f,1.0f,0.0f));
     }
 
     void turnUD(float fi){                                      // поворот от первого лица вверх вниз
-      QVector3D right =  q.rotatedVector(QVector3D(1,0,0));
-      double fi2 = (double)fi*PI/360.0;
-      q=QQuaternion((float)cos(fi2), right*(float)sin(fi2))*q;
+      //QVector3D right =  q.rotatedVector(QVector3D(1,0,0));
+      camUp = q.rotatedVector(camUp);   // актуализируем поворот
+      /// TODO pView если уже был незафиксированный поворот, актуализируем его
+      // ищем вектор перпендикуляра
+      QVector3D right = QVector3D::crossProduct(camUp,pView);
+      // смещаем относительно вектора перпендикуляра
+      q=QQuaternion::fromAxisAndAngle(right,fi)*q;
     }
 
     void twirl(float fi){                                   // поворот от первого лица вокруг направления взгляда
-      QVector3D dir =  q.rotatedVector(QVector3D(0,0,-1));
-      double fi2 = (double)fi*PI/360.0;
-      q=QQuaternion((float)cos(fi2), dir*(float)sin(fi2))*q;
+      //QVector3D dir =  q.rotatedVector(QVector3D(0,0,-1));
+      /// TODO pView // корректируем если был поворот
+      q=QQuaternion::fromAxisAndAngle(pView,fi)*q;
     }
 
     void turnOX(float fi){  // поворот строго по осям системы координат (без учёта поворота самой системы координат)
-      double fi2 = (double)fi*PI/360.0;
-      q=QQuaternion((float)cos(fi2), QVector3D(1,0,0)*(float)sin(fi2))*q;
+      q=QQuaternion::fromAxisAndAngle(QVector3D(1,0,0),fi)*q; // поворот мира вокруг оси Х центра координат
     }
 
     void turnOY(float fi){  // поворот строго по осям системы координат (без учёта поворота самой системы координат)
-      double fi2 = (double)fi*PI/360.0;
-      q=QQuaternion((float)cos(fi2), QVector3D(0,1,0)*(float)sin(fi2))*q;
+      q=QQuaternion::fromAxisAndAngle(QVector3D(0,1,0),fi)*q;
     }
 
     void turnOZ(float fi){  // поворот строго по осям системы координат (без учёта поворота самой системы координат)
-      double fi2 = (double)fi*PI/360.0;
-      q=QQuaternion((float)cos(fi2), QVector3D(0,0,1)*(float)sin(fi2))*q;
+      q=QQuaternion::fromAxisAndAngle(QVector3D(0,0,1),fi)*q;
     }
 
     void moveFB(float dist)     //  смещение камеры в сторону от первого лица, шаг вперёд-назад
     {
-      QVector3D mdir =  q.rotatedVector(QVector3D(0,0,-1));
+      QVector3D mdir =  pView;
       mdir.normalize();
       pos += mdir*dist;
     }
 
+    // strafe
     void moveLR(float dist)     //  смещение камеры в сторону от первого лица, шаг влево-вправо
     {
-      QVector3D mdir =  q.rotatedVector(QVector3D(1,0,0));
+      // если уже был незафиксированный поворот, актуализируем его
+      camUp = q.rotatedVector(camUp);
+      /// TODO pView если уже был незафиксированный поворот, актуализируем его
+      // ищем вектор перпендикуляра и смещаем относительно его
+      QVector3D mdir = QVector3D::crossProduct(camUp,pView);
       mdir.normalize();
       pos += mdir*dist;
     }
 
     void moveUD(float dist)     //  смещение камеры в сторону от первого лица, шаг вверх-вниз
     {
-      QVector3D mdir =  q.rotatedVector(QVector3D(0,1,0));
-      mdir.normalize();
-      pos += mdir*dist;
+      //QVector3D mdir =  q.rotatedVector(QVector3D(0,1,0));
+      //mdir.normalize();
+      // если уже был незафиксированный поворот, актуализируем его
+      camUp = q.rotatedVector(camUp);   // camUp у нас изначально нормализованный вектор
+      QVector3D mdir = camUp;
+      if (strated){   // режим парящей камеры
+          mdir.setY(0);
+        }
+      pos += camUp*dist; //pos += mdir*dist;
     }
 
-    // "следящая" камера
-    QVector3D mStrafe;
-    void moveStrafeCamera(float speed){ // Задаем скорость
-        QVector3D vVector; // Получаем вектор взгляда
-        /*vVector.x = mView.x - mPos.x;
-        vVector.y = mView.y - mPos.y;
-        vVector.z = mView.z - mPos.z;
-
-        vVector.y = 0.0f; // Это запрещает камере подниматься вверх
-        vVector = Normalize(vVector);
-
-        mPos.x += vVector.x * speed;
-        mPos.z += vVector.z * speed;
-        mView.x += vVector.x * speed;
-        mView.z += vVector.z * speed;*/
-    }
-
-    void strafe(float speed){  // "следящая" камера
-        /* // добавим вектор стрейфа к позиции
-        mPos.x += mStrafe.x * speed;
-        mPos.z += mStrafe.z * speed;
-
-         // Добавим теперь к взгляду
-        mView.x += mStrafe.x * speed;
-        mView.z += mStrafe.z * speed;*/
-    }
-
-    void Rotate_Position(float angle, float x, float y, float z);   // поворот камеры от третьего лица
+    // поворот камеры от третьего лица
+    void Rotate_PositionX(float angle);
+    void Rotate_PositionY(float angle);
 
     void push(const QPointF& p);
-    void moveByMouse(const QPointF& p, const QQuaternion &transformation);
-    QVector3D m_axis;           // ось вращения
-    float m_angularVelocity;    // угловая скорость вращения
+    void moveByMouse(const QPointF& p);
+
+    QVector3D q_axis;           // ось вращения
+    float q_angularVelocity;    // угловая скорость вращения позиции камеры
+    QVector3D rq_axis;           // ось вращения
+    float rq_angularVelocity;    // угловая скорость вращения вокруг объекта слежения
+
     QPointF m_lastPos;
     QTime m_lastTime;
     float mouse_sensitivity;

@@ -5,97 +5,74 @@ CameraQuat::CameraQuat()
 {
 q.setVector(0.0f,0.0f,0.0f);
 q.setScalar(1.0f);
-pos.setX(0.0f);pos.setY(0.0f);pos.setZ(0.0f);
 rq.setVector(0.0f,0.0f,0.0f);
 rq.setScalar(1.0f);
 
 pos=QVector3D(0.0f,0.0f,0.5f);      //
 pView=QVector3D(0.0f,0.0f,-0.5f);   // ((вектор взгляда)смещение от позиции камеры) позиция взгляда = позиция камеры + смещение
 posView=pos+pView;
-camUp=QVector3D(0.0f,1.0f,0.0f);
+camUp=QVector3D(0.0f,1.0f,0.0f);  // нормализованный вектор верха
 
-m_angularVelocity=0;
-m_axis = QVector3D(0, 1, 0);            // начальный вектор вращения вдоль оси Y
+q_angularVelocity=0;
+rq_angularVelocity=0;
+q_axis = QVector3D(0, 1, 0);            // начальный вектор вращения вдоль оси Y
+rq_axis = QVector3D(0, 1, 0);            // начальный вектор вращения вдоль оси Y
 m_lastTime = QTime::currentTime();      // зафиксируем текущее время (для вычислений с угловой скоростью)
 mouse_sensitivity=1.0f;
+
+grounded=true; // по умолчанию используем режим "заземления"
+strated=false;  // режим "парение" по умолчанию выключен
 }
 
-void CameraQuat::Rotate_Position(float angle, float x, float y, float z)
+void CameraQuat::Rotate_PositionX(float angle)
 {
-  // версия для клавиатуры
-  // величина шага поворота (или разница между позициями мыши)
-  float delta = angle/100;//0.01f; //QLineF delta(m_lastPos, p);
-  // угловая скорость для анимации
-  //m_angularVelocity = 180*delta.length() / (PI*msecs);
-  // вектор вокруг которого разворачиваем
-  m_axis = QVector3D(0.0f,1.0f,0.0f);//m_axis = QVector3D(-delta.dy(), delta.dx(), 0.0f).normalized();
-  //*********************************************************************************
-  //*** версия не учитывает поворот осей координат, крутит только вокруг истинной оси
-  //*/ // получаем развернутый по текущему кватерниону угол разворота (он у нас единичный)
-  //*/ QQuaternion nq;
-  //*/ m_axis = nq.rotatedVector(m_axis); //m_axis = transformation.rotatedVector(m_axis);
-  //*/ // получаем кватернион поворота позиции камеры
-  //*/ rq = QQuaternion::fromAxisAndAngle(m_axis, 180 / PI * delta) * rq;//m_rotation = QQuaternion::fromAxisAndAngle(m_axis, 180 / PI * delta.length()) * m_rotation;
-  //**********************************************************************************
-  QQuaternion nq=QQuaternion::fromAxisAndAngle(m_axis,angle); // дополнительное вращение вокруг заданной оси
-  rq = rq * nq; // получаем дополнительный разворот матрицы поворота
+  camUp = q.rotatedVector(camUp);  // получаем развёрнутую ось вращения (от q или qr роли не играет)
+  /// TODO pView если уже был незафиксированный поворот, актуализируем его
+  // ищем вектор перпендикуляра
+  QVector3D right = QVector3D::crossProduct(camUp,pView);
+  rq = QQuaternion::fromAxisAndAngle(right,angle)*rq; // получаем дополнительный разворот матрицы поворота
+}
 
-  posView=q.rotatedVector(QVector3D(0,0,-1))+pos;    // точка взгляда
-  //posView=posView+speed*rq.rotatedVector(QVector3D(0,0,-1));//поворачиваем точку взгляда и складываем с текущей позицией чтобы получить новую позицию точки взгляда
-  QVector3D oricampos(0.0f,0.0f,1.0f);  // начальная позиция камеры (?нормализованная?)
-  QVector3D campos=rq.rotatedVector(oricampos); // повёрнутая позиция камеры
-  //pos=campos;//+posView;
-  QVector3D oriUp(0.0f,1.0f,0.0f);  // начальная позиция верха
-  //camUp=rq.rotatedVector(oriUp); // повёрнутая позиция верха
-  //turnLR(angle);
-
-
-
-  // получаем позицию взгляда - точку вокруг которой строится вращение
-  //QVector3D pView=q.rotatedVector(QVector3D(0,0,-1))+pos;
-  // теперь нам нужна вертикаль (для вращения вокруг неё по оси Y)
-  //m_axis = q.rotatedVector(m_axis)+pos+QVector3D(0,0,-1); // переносим вектор поворота в позицию камеры + смещение
-  /**/ // получаем развернутый по текущему кватерниону угол разворота
-  /**/
-  /**/ //m_axis = nq.rotatedVector(QVector3D(0,0,-1)); //m_axis = transformation.rotatedVector(m_axis);
-  /**/ // получаем кватернион поворота позиции камеры
-  /**/ //rq = rq * QQuaternion::fromAxisAndAngle(m_axis, 180 / PI * delta);//m_rotation = QQuaternion::fromAxisAndAngle(m_axis, 180 / PI * delta.length()) * m_rotation;
-  //*************************************************************************************
+void CameraQuat::Rotate_PositionY(float angle)
+{
+  q.rotatedVector(camUp);  // получаем развёрнутую ось вращения (от q или qr роли не играет)
+  QVector3D top = camUp;
+  rq = QQuaternion::fromAxisAndAngle(top,angle)*rq; // получаем дополнительный разворот матрицы поворота
 }
 
 /// входящие параметры
 /// 1 - текущая точка в которой щёлкнули кнопкой (пересчитанной из экранной в координаты контекста отображения)
 /// 2 - новый кватернион или сопряженный текущей расчитанной позиции расчитанной из угловой скорости раннее
-void CameraQuat::moveByMouse(const QPointF &p, const QQuaternion &transformation)
+void CameraQuat::moveByMouse(const QPointF &p)
 {
-    int msecs;                                  // перенесли объявление повыше
-    QTime currentTime = QTime::currentTime();   // и взятие текущего времени тоже
-    msecs = m_lastTime.msecsTo(currentTime);    // дельта времени
+    int msecs;                                  // дельта времени
+    QTime currentTime = QTime::currentTime();   // взятие текущего времени
+    msecs = m_lastTime.msecsTo(currentTime);
 
     if (msecs <= 20)    // лишний раз зачем считать?
         return;
 
     QLineF delta(m_lastPos, p);
-    m_angularVelocity = 180*delta.length() / (PI*msecs);
+    q_angularVelocity = 180*delta.length() / (PI*msecs);
     //*********************************************************
-    //*/ этот кусок почемуто не учитывает поворот координат по Z, при повороте на 180 мышь получается инвертированной
+    //*/ этот кусок почему-то не учитывает поворот координат по Z, при повороте на 180 мышь получается инвертированной
     //*/ тоже самое если использовать функции turnOX, turnOY, turnOZ
     //*/ m_axis = QVector3D(-delta.dy(), delta.dx(), 0.0f).normalized();
     //*/ m_axis = transformation.rotatedVector(m_axis);
     //*/ q = QQuaternion::fromAxisAndAngle(m_axis, 180 / PI * delta.length()) * q;
     //*********************************************************
     /**/    turnLR(180 / PI * delta.dx()); // * mouse_sensitivity
-    /**/    turnUD(180 / PI * -delta.dy()); // * mouse_sensitivity
+    /**/    turnUD(180 / PI * delta.dy()); // * mouse_sensitivity
     //*********************************************************
     m_lastPos = p;              // запоминаем последнюю позицию мыши
     m_lastTime = currentTime;   // запоминаем последнюю позицию времени (для расчёта скорости вращения (пригодится))
 }
 
-void CameraQuat::push(const QPointF& p)
+void CameraQuat::push(const QPointF& p)   // запоминаем сотояние (обычно при нажатии кнопки мыши)
 {
     //m_rotation = rotation();            // запоминаем текущее значение поворота в кватернионе (с учётом прошедшего времени)
     //m_pressed = true;                   // ВЗВОДИМ флаг нажатия клавиш мыши
     m_lastTime = QTime::currentTime();  // запоминаем время когда запомнили текущий поворот (здесь возникает лаг с currentTime так как прошло время машшинной обработки команд и currentTime в функции rotation() != m_lastTime)
-    m_lastPos = p;                      // запоминаем текущую точку в которой щёлкнули кнопкой (пересчитанной из экранной в координаты (сцены??))
-    m_angularVelocity = 0.0f;           // устанавливаем угловую скорость равной 0 (тормозим вращение)
+    m_lastPos = p;                      // запоминаем текущую точку в которой щёлкнули кнопкой мыши (пересчитанной из координат устройства в координаты окна отображения)
+    //q_angularVelocity = 0.0f;           // устанавливаем угловую скорость равной 0 (тормозим вращение)
 }

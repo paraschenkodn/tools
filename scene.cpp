@@ -30,6 +30,7 @@ Scene::Scene(QWidget *parent) :
   //  параметры камеры
   cameraFocusAngle=90;                // устанавливаем начальный угол проекции
   camera.pos=QVector3D(0.0f,0.0f,1.0f);
+  camera.setView(QVector3D(0.0f,0.0f,0.0f));
   mouse_sensitivity=1.0f;
 
   mbuilder=new MapBuilder();
@@ -345,6 +346,12 @@ void Scene::addMap()
 
 void Scene::keyPressEvent(QKeyEvent *event)
 {
+  if (event->key()==Qt::ShiftModifier) {
+      camera.strated=true;  // режим парящей камеры
+    }
+  else {
+      camera.strated=false;
+    }
   switch (event->key()) {
     case Qt::Key_Up:
       camera.moveUD(step);
@@ -361,26 +368,24 @@ void Scene::keyPressEvent(QKeyEvent *event)
   case Qt::Key_W:
       --angle_x;
       if (angle_x<0) angle_x=359;
-      //camera.turnUD(-1.0f);
       //camera.moveUD(+step);
+      camera.Rotate_PositionX(+1.0f); // поворот по оси х
     break;
   case Qt::Key_S:
       ++angle_x;
       if (angle_x>=360) angle_x=0;
-      //camera.turnUD(+1.0f);
       //camera.moveUD(-step);
+      camera.Rotate_PositionX(-1.0f); // поворот по оси х
     break;
   case Qt::Key_A:
       --angle_y;
       if (angle_y<0) angle_y=359;
-      camera.Rotate_Position(-1.0f,0.0f,1.0f,0.0f);
-      //camera.moveLR(+step);
+      camera.Rotate_PositionY(-1.0f); // поворот по оси y
     break;
   case Qt::Key_D:
       ++angle_y;
       if (angle_y>=360) angle_y=0;
-      camera.Rotate_Position(+1.0f,0.0f,1.0f,0.0f);
-      //camera.moveLR(-step);
+      camera.Rotate_PositionY(+1.0f); // поворот по оси y
     break;
   case Qt::Key_Q:
         --angle_z;
@@ -394,6 +399,18 @@ void Scene::keyPressEvent(QKeyEvent *event)
         //camera.turnOZ(+1.0f);
         camera.twirl(+1.0f);
     break;
+    case Qt::Key_T:
+        camera.turnUD(+1.0f);
+      break;
+    case Qt::Key_G:
+        camera.turnUD(-1.0f);
+      break;
+    case Qt::Key_F:
+        camera.turnLR(+1.0f);
+      break;
+    case Qt::Key_H:
+        camera.turnLR(-1.0f);
+      break;
     case Qt::Key_M:
         m_shphere->radius=m_shphere->radius+0.001;
         m_triangle->setx0(m_triangle->m_x0-0.001); // +
@@ -452,7 +469,7 @@ void Scene::mouseReleaseEvent(QMouseEvent *event)
 void Scene::mouseMoveEvent(QMouseEvent *event)
 {
   if (event->buttons() & Qt::LeftButton) {
-     camera.moveByMouse(pixelPosToViewPos(event->localPos()),QQuaternion());
+     camera.moveByMouse(pixelPosToViewPos(event->localPos()));
      setCamera();
   }
 }
@@ -466,40 +483,8 @@ setCamera();
 }
 
 void Scene::setCamera() {
-    QQuaternion t;
-    t=camera.q*camera.rq;
-
-    CameraView.setToIdentity();
-    cameraCenter = camera.q.rotatedVector(QVector3D(0,0,-1))+camera.pos; // старая позиция
-    cameraEye = camera.rq.rotatedVector(QVector3D(0,0,1))+cameraCenter;   // - относительный вектор -QVector3D(0,0,-1)
-
-    cameraCenter = camera.q.rotatedVector(QVector3D(0,0,-1))+camera.pos; //QVector3D(0,0,-1) - это относительный вектор
-    cameraUp = camera.q.rotatedVector(QVector3D(0,1,0));
-    // Нормализуем вектор стрейфа
-    //QVector3D vCross = Cross(mView, mPos, mUp);
-    //         camera.mStrafe = Normalize(vCross);
-    CameraView.lookAt(cameraEye,cameraCenter,cameraUp); // установка камеры (матрицы трансфрмации)
-    //CameraView.rotate(camera.rq);// поворот от третьего лица
-
-    MVM.setToIdentity();  // установка начального значения
-    QMatrix4x4 mscale;
-    QMatrix4x4 mrotate;
-    QMatrix4x4 mtranslate;
-    mscale.scale(1.0f,1.0f,1.0f);
-    mrotate.rotate(camera.rq);
-    mtranslate.translate(-cameraCenter);
-    //MVM=mscale*mrotate*mtranslate;
-    //MVM=mtranslate*mrotate*mscale;
-    //MVM.rotate(camera.rq);  // поворот вокруг оси центра координат
-    // получаем вектор переноса, отняв от вектора позиции камеры, вектор позиции взгляда
-    //MVM.translate(-cameraCenter); // переносим по z от "глаз", сдвигаем камеру на минус, т.е. в сторону затылка.
-    // не работает в ортогональной проекции если перенести слишком далеко, за пределы куба отсечения
-    // оппа, мы видим передние границы пирамиды отсечения, где всё отсекается (тут-то шейдерным сферам и конец)
-    // изменяем масштаб фигуры (увеличиваем)
-    //MVM.scale(10.0f);  // отрицательное число переворачивает проекцию // влияет только на ортогональную проекцию // убивает Шферы
-    // указываем угол поворота и ось поворота смотрящую из центра координат к точке x,y,z,
-    MVM=CameraView*MVM;  // получаем матрицу трансформации итогового вида
-
+    camera.apply();
+    MVM=camera.CameraView;
     setCameraInfo();
 }
 
