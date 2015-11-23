@@ -121,6 +121,7 @@ public slots:
   void buildNewMap();
   // добавляем в карту
   void addMap();
+  void reset();
 private slots:
   // заставляем прорисовываться по таймеру
   void slotAnimation();
@@ -129,6 +130,7 @@ signals:
   void setPerspectiveInfo(const QString &);
   void setFiguresInfo(const QString &);
   void setFiguresInfo2(const QString &);
+  void setBar(const QString &);
 };
 
 #endif // SCENE_H

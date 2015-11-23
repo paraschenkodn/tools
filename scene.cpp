@@ -29,7 +29,7 @@ Scene::Scene(QWidget *parent) :
 
   //  параметры камеры
   cameraFocusAngle=90;                // устанавливаем начальный угол проекции
-  camera.pos=QVector3D(0.0f,0.0f,1.0f);
+  camera.pos=QVector3D(0.0f,0.0f,0.5f);
   camera.setView(QVector3D(0.0f,0.0f,0.0f));
   mouse_sensitivity=1.0f;
 
@@ -46,6 +46,22 @@ delete m_text;
 delete karta;
 doneCurrent();
 //delete mbuilder;
+}
+
+void Scene::reset(){
+    step=0.01f; // шаг сдвига фигур
+    angle_x=0;
+    angle_y=0;
+    angle_z=0;
+    perspective=true;
+    setFigureInfo(); //
+    //  параметры камеры
+    camera.CameraQuat();// сброс камеры
+    cameraFocusAngle=90;                // устанавливаем начальный угол проекции
+    camera.pos=QVector3D(0.0f,0.0f,0.5f);
+    camera.setView(QVector3D(0.0f,0.0f,0.0f));
+    mouse_sensitivity=1.0f;
+    setCamera(); // устанавливаем параметры камеры
 }
 
 void Scene::initializeGL() {
@@ -85,7 +101,7 @@ void Scene::initializeGL() {
     // тект
     m_text =new Text();
 
-    setCamera(); // усанавливаем параметры камеры
+    setCamera(); // устанавливаем параметры камеры
     setFigureInfo(); //
 
     // karta
@@ -271,7 +287,7 @@ void Scene::paintFlatMap()
 }
 
 void Scene::resizeGL(int w, int h){
-    ratio = (1.0*w)/(!h?1:h);
+    ratio = (1.0*w)/(!h?1:h);   // !h?1:h - защита от деления на 0
     glViewport(0,0,w,h);
     viewport.setX(0); viewport.setY(0); viewport.setZ((float)w); viewport.setW((float)h);
 }
@@ -346,11 +362,13 @@ void Scene::addMap()
 
 void Scene::keyPressEvent(QKeyEvent *event)
 {
-  if (event->key()==Qt::ShiftModifier) {
+  if (event->modifiers() & Qt::ShiftModifier) {
       camera.strated=true;  // режим парящей камеры
+      emit setBar(QString("strated=true"));
     }
   else {
       camera.strated=false;
+      emit setBar(QString("strated=false"));
     }
   switch (event->key()) {
     case Qt::Key_Up:
@@ -433,8 +451,8 @@ void Scene::keyPressEvent(QKeyEvent *event)
   case Qt::Key_O: // увеличиваем угол перспективы камеры max=120 // TODO приближать камеру
       if (cameraFocusAngle<120) ++cameraFocusAngle;
     break;
-  case Qt::Key_P:
-      cameraFocusAngle=90;
+  case Qt::Key_R:
+      reset();
     break;
     default:
       break;
@@ -475,8 +493,22 @@ void Scene::mouseMoveEvent(QMouseEvent *event)
 }
 
 void Scene::wheelEvent(QWheelEvent *event)
-{ // шаг колеса обычно 120 едениц, 1 еденица это 1/8 градуса, значит 1 шаг = 15 градусам.
-  // мы будем считать в еденицах (некоторые драйвера мыши дают точность больше, т.е. меньше 120 за такт)
+{
+    if( event->modifiers() & Qt::ShiftModifier )
+    {
+        //camera.strated=true;  // режим парящей камеры
+        //emit setBar(QString("strated=true"));
+    }
+    else {
+        //camera.strated=false;  // режим парящей камеры
+        //emit setBar(QString("strated=false"));
+    }
+    if( event->modifiers() & Qt::ControlModifier )
+    {
+        // do something even awesomer!
+    }
+// шаг колеса обычно 120 едениц, 1 еденица это 1/8 градуса, значит 1 шаг = 15 градусам.
+// мы будем считать в еденицах (некоторые драйвера мыши дают точность больше, т.е. меньше 120 за такт)
 // move to new position by step 120/10000 пока только по оси Z (-delta - значит крутим на себя)
 camera.moveFB((float)event->angleDelta().y()/10000);
 setCamera();
@@ -490,16 +522,16 @@ void Scene::setCamera() {
 
 void Scene::setCameraInfo()
 {
-    QString text="I,O,P - изменение проекции. Фокусный угол="+QString().setNum(cameraFocusAngle);
-    text=text+" cameraEye="+QString().setNum(cameraEye[0])+", "+QString().setNum(cameraEye[1])+", "+QString().setNum(cameraEye[2])
-            +", cameraCenter="+QString().setNum(cameraCenter[0])+", "+QString().setNum(cameraCenter[1])+", "+QString().setNum(cameraCenter[2])
-            +" cameraUp="+QString().setNum(cameraUp[0])+", "+QString().setNum(cameraUp[1])+", "+QString().setNum(cameraUp[2]);
+    QString text="I,O - изменение проекции. Угол проекции="+QString().setNum(cameraFocusAngle);
+    text=text+" cameraEye="+QString().setNum(camera.pos[0])+", "+QString().setNum(camera.pos[1])+", "+QString().setNum(camera.pos[2])
+            +", cameraCenter="+QString().setNum(camera.posView[0])+", "+QString().setNum(camera.posView[1])+", "+QString().setNum(camera.posView[2])
+            +" cameraUp="+QString().setNum(camera.camUp[0])+", "+QString().setNum(camera.camUp[1])+", "+QString().setNum(camera.camUp[2]);
     emit setPerspectiveInfo(text);
 }
 
 void Scene::setFigureInfo()
 {
-    QString text=m_triangle->getFigureInfo()+", "+m_shphere->getFigureInfo()+", Угол поворота z="+QString().setNum(angle_z)+"°";
+    QString text=m_triangle->getFigureInfo()+", "+m_shphere->getFigureInfo()+", Угол поворота -Z="+QString().setNum(angle_z)+"°";
     emit setFiguresInfo(text);
     text="M, N - изменение фигуры. Radius="+QString().setNum(m_shphere->radius);
     emit setFiguresInfo2(text);

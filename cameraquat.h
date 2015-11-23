@@ -66,7 +66,7 @@ public:
           top = q.rotatedVector(QVector3D(0,1,0));  // относительный вектор вращения
         }
       else {
-        camUp = q.rotatedVector(camUp); // корректируем вектор вращения если уже был поворот ???
+        ///camUp = q.rotatedVector(camUp); // корректируем вектор вращения если уже был поворот ??? если фиксировать то всё сразу на каждом этапе, перед, или после.
         top = camUp;
         }
       q=QQuaternion::fromAxisAndAngle(top,fi)*q;
@@ -77,7 +77,7 @@ public:
 
     void turnUD(float fi){                                      // поворот от первого лица вверх вниз
       //QVector3D right =  q.rotatedVector(QVector3D(1,0,0));
-      camUp = q.rotatedVector(camUp);   // актуализируем поворот
+      /// camUp = q.rotatedVector(camUp);   // актуализируем поворот и всё остальное на каждом этапе
       /// TODO pView если уже был незафиксированный поворот, актуализируем его
       // ищем вектор перпендикуляра
       QVector3D right = QVector3D::crossProduct(camUp,pView);
@@ -114,7 +114,7 @@ public:
     void moveLR(float dist)     //  смещение камеры в сторону от первого лица, шаг влево-вправо
     {
       // если уже был незафиксированный поворот, актуализируем его
-      camUp = q.rotatedVector(camUp);
+      /// camUp = q.rotatedVector(camUp); актуализируем всё сразу, перед, или после
       /// TODO pView если уже был незафиксированный поворот, актуализируем его
       // ищем вектор перпендикуляра и смещаем относительно его
       QVector3D mdir = QVector3D::crossProduct(camUp,pView);
@@ -127,12 +127,12 @@ public:
       //QVector3D mdir =  q.rotatedVector(QVector3D(0,1,0));
       //mdir.normalize();
       // если уже был незафиксированный поворот, актуализируем его
-      camUp = q.rotatedVector(camUp);   // camUp у нас изначально нормализованный вектор
+      /// TODO актуализация camUp = q.rotatedVector(camUp);   // camUp у нас изначально нормализованный вектор
       QVector3D mdir = camUp;
       if (strated){   // режим парящей камеры
           mdir.setY(0);
         }
-      pos += camUp*dist; //pos += mdir*dist;
+      pos += mdir*dist; //pos += mdir*dist;
     }
 
     // поворот камеры от третьего лица
@@ -140,6 +140,7 @@ public:
     void Rotate_PositionY(float angle);
 
     void push(const QPointF& p);
+    void rotateByMouse(const QPointF& p);
     void moveByMouse(const QPointF& p);
 
     QVector3D q_axis;           // ось вращения
