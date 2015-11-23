@@ -1,3 +1,5 @@
+//#version 300 es
+
 uniform vec4 viewport;          //получаем размеры окна рисования (x0,y0,w,h)
 uniform float R;    // "левые" переменные на картах ATI надо передавать через uniform
 uniform float maxpointsize; // системная величина, зависит от карты

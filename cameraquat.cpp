@@ -3,25 +3,7 @@
 
 CameraQuat::CameraQuat()
 {
-q.setVector(0.0f,0.0f,0.0f);
-q.setScalar(1.0f);
-rq.setVector(0.0f,0.0f,0.0f);
-rq.setScalar(1.0f);
-
-pos=QVector3D(0.0f,0.0f,0.5f);      //
-pView=QVector3D(0.0f,0.0f,-0.5f);   // ((вектор взгляда)смещение от позиции камеры) позиция взгляда = позиция камеры + смещение
-posView=pos+pView;
-camUp=QVector3D(0.0f,1.0f,0.0f);  // нормализованный вектор верха
-
-q_angularVelocity=0;
-rq_angularVelocity=0;
-q_axis = QVector3D(0, 1, 0);            // начальный вектор вращения вдоль оси Y
-rq_axis = QVector3D(0, 1, 0);            // начальный вектор вращения вдоль оси Y
-m_lastTime = QTime::currentTime();      // зафиксируем текущее время (для вычислений с угловой скоростью)
-mouse_sensitivity=1.0f;
-
-grounded=true; // по умолчанию используем режим "заземления"
-strated=false;  // режим "парение" по умолчанию выключен
+reset();  // установка начальных параметров
 }
 
 void CameraQuat::Rotate_PositionX(float angle)
@@ -74,6 +56,29 @@ void CameraQuat::moveByMouse(const QPointF &p)
     moveLR(delta.dx()); // * mouse_sensitivity
     moveUD(-delta.dy()); // * mouse_sensitivity
     m_lastPos = p;              // запоминаем последнюю позицию мыши
+}
+
+void CameraQuat::reset()
+{
+  q.setVector(0.0f,0.0f,0.0f);
+  q.setScalar(1.0f);
+  rq.setVector(0.0f,0.0f,0.0f);
+  rq.setScalar(1.0f);
+
+  pos=QVector3D(0.0f,0.0f,0.5f);      //
+  pView=QVector3D(0.0f,0.0f,-0.5f);   // ((вектор взгляда)смещение от позиции камеры) позиция взгляда = позиция камеры + смещение
+  posView=pos+pView;
+  camUp=QVector3D(0.0f,1.0f,0.0f);  // нормализованный вектор верха
+
+  q_angularVelocity=0;
+  rq_angularVelocity=0;
+  q_axis = QVector3D(0, 1, 0);            // начальный вектор вращения вдоль оси Y
+  rq_axis = QVector3D(0, 1, 0);            // начальный вектор вращения вдоль оси Y
+  m_lastTime = QTime::currentTime();      // зафиксируем текущее время (для вычислений с угловой скоростью)
+  mouse_sensitivity=1.0f;
+
+  grounded=true; // по умолчанию используем режим "заземления"
+  strated=false;  // режим "парение" по умолчанию выключен
 }
 
 void CameraQuat::push(const QPointF& p)   // запоминаем сотояние (обычно при нажатии кнопки мыши)

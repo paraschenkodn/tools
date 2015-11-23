@@ -151,6 +151,8 @@ public:
     QPointF m_lastPos;
     QTime m_lastTime;
     float mouse_sensitivity;
+
+    void reset();
 };
 
 #endif // CAMERAQUAT_H

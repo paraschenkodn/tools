@@ -56,7 +56,7 @@ void Scene::reset(){
     perspective=true;
     setFigureInfo(); //
     //  параметры камеры
-    camera.CameraQuat();// сброс камеры
+    camera.reset();// сброс камеры
     cameraFocusAngle=90;                // устанавливаем начальный угол проекции
     camera.pos=QVector3D(0.0f,0.0f,0.5f);
     camera.setView(QVector3D(0.0f,0.0f,0.0f));
