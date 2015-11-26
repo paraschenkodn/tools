@@ -21,6 +21,8 @@ public:
   std::vector<float> m_colors; // создаём вектор (контейнер хранения) координат цветов
   std::vector<float> texCoord; // координаты текстуры
   QVector<QString> captions; // список названий
+  float IDm;    // идентификатор модели
+  std::vector<float> IDv; // создаём вектор (контейнер хранения) идентификаторов вершин (номер модели, индекс вершины, 0, признак выборки)
 
   QOpenGLShaderProgram program; // шейдер рисования линий
   int m_vertexAttr;

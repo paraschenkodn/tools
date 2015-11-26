@@ -106,6 +106,7 @@ void Scene::initializeGL() {
 
     // karta
     karta = new Karta();
+    karta->IDm = 1; // устанавливаем ID модели
 }
 
 void Scene::paintGL(){
@@ -223,6 +224,14 @@ void Scene::paintFlatMap()
       }
       mbuilder->newmapbuild=false; // забрали карту, готовьте новую
       mbuilder->m_mutex.unlock();
+
+      karta->IDv.resize(karta->captions.size()*4);
+      for (uint i=0;i<karta->IDv.size();i+=4) {
+          karta->IDv[i]=karta->IDm; // ID model
+          karta->IDv[i+1]=i;    // ID point
+          karta->IDv[i+2]=0;    // reserv
+          karta->IDv[i+3]=0;  // ==3711, что значит, что ничего не выбрано
+      }
     }
 
   //karta->draw();
@@ -240,11 +249,20 @@ void Scene::paintFlatMap()
       // зaпихиваем в его программу матрицу ориентации
       karta->program.setUniformValue(karta->m_MVPmatrix, MVPM);
       // устанавливаем цвет линий
-      glColor3i(0,255,0);
+      karta->program.setUniformValue("colormode", true);    // рисуем одним цветом, не массивом
+      karta->program.setUniformValue("statcolor", QVector4D(0.0f,1.0f,0.0f,0.0f));
       //glLineWidth(10);
+      // устанавливаем связь с идентификаторами выборки
+      karta->program.setAttributeArray("selectID", karta->IDv.data(), 4);
+      karta->program.enableAttributeArray("selectID");
+      karta->program.setUniformValue("selectmode", true);    // активирован режим выборки
       // рисуем линии
       glDrawArrays(GL_LINES,0,karta->vertices.size()/3);
+      // производим проверку выборки объектов
+      glReadPixels ( x, ViewHeight-y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel.v[0] );
+      CurrentObject = cBuffer.GetSelectColorObject ( pixel );
       // деактивируем массивы
+      karta->program.disableAttributeArray("selectID");
       karta->program.disableAttributeArray(karta->m_vertexAttr);
       // очищаем программу
       karta->program.release();

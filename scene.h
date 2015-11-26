@@ -50,6 +50,10 @@ public:
   QMatrix4x4 PMi;
   QMatrix4x4 MVPMi;
 
+  // переменные выборки объектов в шейдерах
+  QVector4D selectID;   // выбранный объект (ID модели, ID vertex, 0, result) if result==3711 - nothing selected
+  bool selectmode;  // true - есть выборка в шейдере, false - нет (в моделях может не быть attribute переменной содержащей ID вершин)
+
 private:
   void initializeGL();
   void paintGL();
