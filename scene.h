@@ -92,7 +92,7 @@ private:
 
   void setFigureInfo(); // формируем и посылаем текст для отображения параметров в главном окне
 
-  QTimer m_timer;
+  QTimer m_timer; // таймер анимации
 
   void setLights();
   void setStates();
@@ -100,6 +100,8 @@ private:
 
   bool perspective;  // признак рисования в перспективной или в ортогональной проекции
   int paintMode; // режим рисования
+
+  GLuint vbo; // количество свободных буферов VBO
 
   // ДВИЖОК РИСОВАНИЯ КАРТЫ
   MapBuilder *mbuilder;   // класс картостроителя
