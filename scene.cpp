@@ -122,6 +122,7 @@ void Scene::paintGL(){
         paintDM();      // test
         break;
       case 2:
+        setStates();     // включаем буфер глубины, свет и прочее (возможно можно вынести в initGL)
         if (selectmode) {
             // инициализируем свой буфер выбора FBO
             QOpenGLFramebufferObjectFormat fboFormat;
@@ -130,6 +131,10 @@ void Scene::paintGL(){
             QOpenGLFramebufferObject fbo(viewport.z(), viewport.w(), fboFormat);
             fbo.bind();     // рисуем в текстуру
             paintKarta();   // там рисуем и проверяем результат
+            QImage image(fbo.toImage());
+            image.save("D:\\image.png","PNG");
+            QRgb pixel=image.pixel(pmouse.x(),pmouse.y());
+            qDebug() << "R - " << qRed(pixel) << "G - " << qGreen(pixel) << "B - " << qBlue(pixel) << "A - " << qAlpha(pixel);
             fbo.release();
         }
         paintKarta();   //
@@ -205,7 +210,6 @@ void Scene::paintDM()
 
 void Scene::paintKarta()
 {
-    setStates();                    // включаем буфер глубины, свет и прочее (возможно можно вынести в initGL)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     PM.setToIdentity();
     PM.perspective(cameraFocusAngle,ratio,0.1f,100.0f);  // glFrustum( xmin, xmax, ymin, ymax, near, far)  // gluPerspective(fovy, aspect, near, far)
@@ -244,7 +248,7 @@ void Scene::paintFlatMap()
 
       // готовим данные для выборки объектов
       karta->IDv.resize(karta->captions.size()*4);
-      for (uint i=0;i<karta->captions.size();i++) {
+      for (int i=0;i<karta->captions.size();i++) {
           karta->IDv[i*4]=karta->IDm; // ID model
           karta->IDv[i*4+1]=i;    // ID point
           karta->IDv[i*4+2]=0;    // reserv
@@ -295,20 +299,19 @@ void Scene::paintFlatMap()
       m_shphere->m_program->enableAttributeArray(m_shphere->m_vertexAttr);
       m_shphere->m_program->enableAttributeArray(m_shphere->m_colorAttr);
       // активируем выборку объектов
-      karta->program.setAttributeArray("selectID", karta->IDv.data(), 4);
-      karta->program.enableAttributeArray("selectID");
-      karta->program.setUniformValue("selectmode", selectmode);    // указываем режим выборки
-      karta->program.setUniformValue("mouse", pmouse);    //
+      m_shphere->m_program->setAttributeArray("selectID", karta->IDv.data(), 4);
+      m_shphere->m_program->enableAttributeArray("selectID");
+      m_shphere->m_program->setUniformValue("selectmode", selectmode);    // указываем режим выборки
       // рисуем точки
       glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);   // говорим что будут меняться размеры точек в шейдере
       glDrawArrays(GL_POINTS,0,karta->vertices.size()/3);
       glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
       // производим проверку выборки объектов
-      karta->program.disableAttributeArray("selectID");
+      m_shphere->m_program->disableAttributeArray("selectID");
       if (selectmode) { // был заказ на выборку
           QVector<float> pixel(4*viewport.z()*viewport.w());
           //glReadPixels ( pmouse.x(), viewport.w()-pmouse.y(), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel.data() );
-          glReadPixels ( pmouse.x(), viewport.w()-pmouse.y(), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel.data() );
+          glReadPixels ( 0, 0, viewport.z(), viewport.w(), GL_RGBA, GL_UNSIGNED_BYTE, pixel.data() );
           selectID.setX(pixel[0]); selectID.setY(pixel[1]); selectID.setZ(pixel[2]);selectID.setW(pixel[3]);
           qDebug() << "x - " << pmouse.x() << " y - " << viewport.w()-pmouse.y();
           qDebug() << "IDm - " << pixel[0] << " IDv - " << pixel[1];
