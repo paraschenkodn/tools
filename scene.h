@@ -15,6 +15,7 @@
 #include <QTimer>
 #include <QOpenGLFunctions>
 #include <QOpenGLFunctions_3_0>
+#include <QOpenGLFramebufferObject>
 
 /// PAINT MODE
 #define TEST_MODE   1
@@ -52,7 +53,12 @@ public:
 
   // переменные выборки объектов в шейдерах
   QVector4D selectID;   // выбранный объект (ID модели, ID vertex, 0, result) if result==3711 - nothing selected
-  bool selectmode;  // true - есть выборка в шейдере, false - нет (в моделях может не быть attribute переменной содержащей ID вершин)
+  QVector4D oldSelectID;
+  bool selectmode;  // true - выбираем в следующем кадре объект в шейдере, false - нет
+  QPointF pmouse;    // точка выборки
+
+  // TEST
+  void setSelected();
 
 private:
   void initializeGL();
@@ -64,6 +70,7 @@ private:
   float mouse_sensitivity;
   QPointF pixelPosToViewPos(const QPointF &p);
   void keyPressEvent(QKeyEvent *event);         // управление с клавиатуры
+  void mouseDoubleClickEvent(QMouseEvent * event); // выбор объектов
   void mousePressEvent(QMouseEvent *event);      // работка с мышью, переопределяем функции обработки сообщений мыши (нажатие кнопок)
   void mouseReleaseEvent(QMouseEvent *event);    // переопределяем функции обработки сообщений мыши (отпускание кнопки)
   ///*********
@@ -101,7 +108,9 @@ private:
   bool perspective;  // признак рисования в перспективной или в ортогональной проекции
   int paintMode; // режим рисования
 
+  // буфера
   GLuint vbo; // количество свободных буферов VBO
+  //QOpenGLFramebufferObject *fbo;
 
   // ДВИЖОК РИСОВАНИЯ КАРТЫ
   MapBuilder *mbuilder;   // класс картостроителя

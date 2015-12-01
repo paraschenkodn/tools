@@ -34,6 +34,7 @@ Scene::Scene(QWidget *parent) :
   mouse_sensitivity=1.0f;
 
   mbuilder=new MapBuilder();
+  selectmode=false;
 }
 
 Scene::~Scene()
@@ -107,14 +108,30 @@ void Scene::initializeGL() {
     // karta
     karta = new Karta();
     karta->IDm = 1; // устанавливаем ID модели
+
+    // инициализируем свой буфер выбора FBO
+    //QOpenGLFramebufferObjectFormat fboFormat;
+    //fboFormat.setSamples(4);
+    //fboFormat.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+    //fbo= new QOpenGLFramebufferObject(viewport.z*viewport.w*4);
 }
 
 void Scene::paintGL(){
-    switch (paintMode){
+    switch (paintMode){ // 1- devmode 2- prommode
       case 1:
         paintDM();      // test
         break;
       case 2:
+        if (selectmode) {
+            // инициализируем свой буфер выбора FBO
+            QOpenGLFramebufferObjectFormat fboFormat;
+            fboFormat.setSamples(16);
+            fboFormat.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+            QOpenGLFramebufferObject fbo(viewport.z(), viewport.w(), fboFormat);
+            fbo.bind();     // рисуем в текстуру
+            paintKarta();   // там рисуем и проверяем результат
+            fbo.release();
+        }
         paintKarta();   //
         break;
       default:
@@ -225,12 +242,13 @@ void Scene::paintFlatMap()
       mbuilder->newmapbuild=false; // забрали карту, готовьте новую
       mbuilder->m_mutex.unlock();
 
+      // готовим данные для выборки объектов
       karta->IDv.resize(karta->captions.size()*4);
-      for (uint i=0;i<karta->IDv.size();i+=4) {
-          karta->IDv[i]=karta->IDm; // ID model
-          karta->IDv[i+1]=i;    // ID point
-          karta->IDv[i+2]=0;    // reserv
-          karta->IDv[i+3]=0;  // ==3711, что значит, что ничего не выбрано
+      for (uint i=0;i<karta->captions.size();i++) {
+          karta->IDv[i*4]=karta->IDm; // ID model
+          karta->IDv[i*4+1]=i;    // ID point
+          karta->IDv[i*4+2]=0;    // reserv
+          karta->IDv[i*4+3]=0;  // ==3711, что значит, что ничего не выбрано
       }
     }
 
@@ -252,17 +270,9 @@ void Scene::paintFlatMap()
       karta->program.setUniformValue("colormode", true);    // рисуем одним цветом, не массивом
       karta->program.setUniformValue("statcolor", QVector4D(0.0f,1.0f,0.0f,0.0f));
       //glLineWidth(10);
-      // устанавливаем связь с идентификаторами выборки
-      karta->program.setAttributeArray("selectID", karta->IDv.data(), 4);
-      karta->program.enableAttributeArray("selectID");
-      karta->program.setUniformValue("selectmode", true);    // активирован режим выборки
       // рисуем линии
       glDrawArrays(GL_LINES,0,karta->vertices.size()/3);
-      // производим проверку выборки объектов
-      glReadPixels ( x, ViewHeight-y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel.v[0] );
-      CurrentObject = cBuffer.GetSelectColorObject ( pixel );
       // деактивируем массивы
-      karta->program.disableAttributeArray("selectID");
       karta->program.disableAttributeArray(karta->m_vertexAttr);
       // очищаем программу
       karta->program.release();
@@ -284,10 +294,28 @@ void Scene::paintFlatMap()
       // активируем массивы
       m_shphere->m_program->enableAttributeArray(m_shphere->m_vertexAttr);
       m_shphere->m_program->enableAttributeArray(m_shphere->m_colorAttr);
+      // активируем выборку объектов
+      karta->program.setAttributeArray("selectID", karta->IDv.data(), 4);
+      karta->program.enableAttributeArray("selectID");
+      karta->program.setUniformValue("selectmode", selectmode);    // указываем режим выборки
+      karta->program.setUniformValue("mouse", pmouse);    //
       // рисуем точки
       glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);   // говорим что будут меняться размеры точек в шейдере
       glDrawArrays(GL_POINTS,0,karta->vertices.size()/3);
       glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+      // производим проверку выборки объектов
+      karta->program.disableAttributeArray("selectID");
+      if (selectmode) { // был заказ на выборку
+          QVector<float> pixel(4*viewport.z()*viewport.w());
+          //glReadPixels ( pmouse.x(), viewport.w()-pmouse.y(), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel.data() );
+          glReadPixels ( pmouse.x(), viewport.w()-pmouse.y(), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel.data() );
+          selectID.setX(pixel[0]); selectID.setY(pixel[1]); selectID.setZ(pixel[2]);selectID.setW(pixel[3]);
+          qDebug() << "x - " << pmouse.x() << " y - " << viewport.w()-pmouse.y();
+          qDebug() << "IDm - " << pixel[0] << " IDv - " << pixel[1];
+          selectmode=false; // закончили выборку
+          // вызываем функцию обработки выборки
+          setSelected();
+      }
       // деактивируем массивы
       m_shphere->m_program->disableAttributeArray(m_shphere->m_vertexAttr);
       m_shphere->m_program->disableAttributeArray(m_shphere->m_colorAttr);
@@ -302,6 +330,12 @@ void Scene::paintFlatMap()
           m_text->drawO(MVPM,karta->captions[i],QVector3D(karta->vertices[i*3],karta->vertices[(i*3)+1],karta->vertices[(i*3)+2]));
       }
       m_text->reset();
+}
+
+void Scene::setSelected(){
+    karta->m_colors[((int)selectID.y())*3]=0.0f;
+    karta->m_colors[((int)selectID.y())*3+1]=0.0f;
+    karta->m_colors[((int)selectID.y())*3+2]=1.0f;
 }
 
 void Scene::resizeGL(int w, int h){
@@ -488,6 +522,13 @@ QPointF Scene::pixelPosToViewPos(const QPointF& p)
 {
     return QPointF(2.0 * float(p.x()) / width() - 1.0,
                    1.0 - 2.0 * float(p.y()) / height());
+}
+
+void Scene::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    oldSelectID=selectID;
+    pmouse=event->localPos();
+    selectmode=true;
 }
 
 void Scene::mousePressEvent(QMouseEvent *event)
