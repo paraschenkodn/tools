@@ -131,11 +131,24 @@ void Scene::paintGL(){
             QOpenGLFramebufferObject fbo(viewport.z(), viewport.w(), fboFormat);
             fbo.bind();     // рисуем в текстуру
             paintKarta();   // там рисуем и проверяем результат
+
+            glPixelStorei(GL_PACK_ALIGNMENT, 1);
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+            float pix[]={0.0,0.0,0.0,0.0};
+            glReadPixels ( pmouse.x(), viewport.w()-pmouse.y(), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pix );
+            //glReadPixels ( 0, 0, viewport.z(), viewport.w(), GL_RGBA, GL_UNSIGNED_BYTE, &pix );
+            selectID.setX(pix[0]); selectID.setY(pix[1]); selectID.setZ(pix[2]);selectID.setW(pix[3]);
+            qDebug() << "x - " << pmouse.x() << " y - " << viewport.w()-pmouse.y();
+            qDebug() << " IDm -" << pix[0] << " IDv -" << pix[1] << " pix[2] -" << pix[2] << " pix[3] -" << pix[3];
+
             QImage image(fbo.toImage());
             image.save("D:\\image.png","PNG");
             QRgb pixel=image.pixel(pmouse.x(),pmouse.y());
             qDebug() << "R - " << qRed(pixel) << "G - " << qGreen(pixel) << "B - " << qBlue(pixel) << "A - " << qAlpha(pixel);
             fbo.release();
+
+            selectmode=false;
+            setSelected();
         }
         paintKarta();   //
         break;
@@ -308,21 +321,9 @@ void Scene::paintFlatMap()
       glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
       // производим проверку выборки объектов
       m_shphere->m_program->disableAttributeArray("selectID");
-      if (selectmode) { // был заказ на выборку
-          QVector<float> pixel(4*viewport.z()*viewport.w());
-          //glReadPixels ( pmouse.x(), viewport.w()-pmouse.y(), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel.data() );
-          glReadPixels ( 0, 0, viewport.z(), viewport.w(), GL_RGBA, GL_UNSIGNED_BYTE, pixel.data() );
-          selectID.setX(pixel[0]); selectID.setY(pixel[1]); selectID.setZ(pixel[2]);selectID.setW(pixel[3]);
-          qDebug() << "x - " << pmouse.x() << " y - " << viewport.w()-pmouse.y();
-          qDebug() << "IDm - " << pixel[0] << " IDv - " << pixel[1];
-          selectmode=false; // закончили выборку
-          // вызываем функцию обработки выборки
-          setSelected();
-      }
       // деактивируем массивы
       m_shphere->m_program->disableAttributeArray(m_shphere->m_vertexAttr);
       m_shphere->m_program->disableAttributeArray(m_shphere->m_colorAttr);
-
       m_shphere->drop();    // release program
 
       //РИСУЕМ ТЕКСТ
