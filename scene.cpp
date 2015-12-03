@@ -107,7 +107,7 @@ void Scene::initializeGL() {
 
     // karta
     karta = new Karta();
-    karta->IDm = 1; // устанавливаем ID модели
+    karta->IDm = ((float)1 / (float)255)*128; //0.5f; // устанавливаем ID модели
 
     // инициализируем свой буфер выбора FBO
     //QOpenGLFramebufferObjectFormat fboFormat;
@@ -126,17 +126,19 @@ void Scene::paintGL(){
         if (selectmode) {
             // инициализируем свой буфер выбора FBO
             QOpenGLFramebufferObjectFormat fboFormat;
-            fboFormat.setSamples(16);
-            fboFormat.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+            //fboFormat.setSamples(16); // нельзя будет иcпользовать glReadPixels
+            //fboFormat.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+            fboFormat.setInternalTextureFormat(GL_RGBA);
             QOpenGLFramebufferObject fbo(viewport.z(), viewport.w(), fboFormat);
             fbo.bind();     // рисуем в текстуру
-            paintKarta();   // там рисуем и проверяем результат
+            paintKarta();
 
-            glPixelStorei(GL_PACK_ALIGNMENT, 1);
-            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-            float pix[]={0.0,0.0,0.0,0.0};
+            //glPixelStorei(GL_PACK_ALIGNMENT, 4);
+            //glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+            //GLfloat pix[]={0.0,0.0,0.0,0.0};
+            GLubyte pix[4];
             glReadPixels ( pmouse.x(), viewport.w()-pmouse.y(), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pix );
-            //glReadPixels ( 0, 0, viewport.z(), viewport.w(), GL_RGBA, GL_UNSIGNED_BYTE, &pix );
+            //glReadPixels ( pmouse.x(), viewport.w()-pmouse.y(), 1, 1, GL_RGBA, GL_FLOAT, &pix );
             selectID.setX(pix[0]); selectID.setY(pix[1]); selectID.setZ(pix[2]);selectID.setW(pix[3]);
             qDebug() << "x - " << pmouse.x() << " y - " << viewport.w()-pmouse.y();
             qDebug() << " IDm -" << pix[0] << " IDv -" << pix[1] << " pix[2] -" << pix[2] << " pix[3] -" << pix[3];
@@ -259,13 +261,13 @@ void Scene::paintFlatMap()
       mbuilder->newmapbuild=false; // забрали карту, готовьте новую
       mbuilder->m_mutex.unlock();
 
-      // готовим данные для выборки объектов
+      // готовим данные для выборки объектов (TODO убрать ограничение в 255 объектов)
       karta->IDv.resize(karta->captions.size()*4);
       for (int i=0;i<karta->captions.size();i++) {
           karta->IDv[i*4]=karta->IDm; // ID model
-          karta->IDv[i*4+1]=i;    // ID point
+          karta->IDv[i*4+1]=((float)1 / (float)255)*i;//((float)i/(float)karta->captions.size());    // ID point ДЕЛЁННОЕ НА КОЛИЧЕСТВО ФРАГМЕНТОВ
           karta->IDv[i*4+2]=0;    // reserv
-          karta->IDv[i*4+3]=0;  // ==3711, что значит, что ничего не выбрано
+          karta->IDv[i*4+3]=1.0f;  // ==3711, что значит, что ничего не выбрано
       }
     }
 
