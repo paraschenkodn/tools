@@ -5,7 +5,7 @@ uniform float R;    // "левые" переменные на картах ATI �
 uniform float maxpointsize; // системная величина, зависит от карты
 attribute highp vec4 vertexAttr; //
 attribute lowp vec4 colorAttr;  //
-attribute lowp vec4 selectID;  // идентификаторы выборки
+attribute highp vec4 selectID;  // идентификаторы выборки
 uniform highp mat4 MVPM;  // gl_ModelViewProjectionMatrix
 uniform highp mat4 MVM;  // gl_ModelViewMatrix
 uniform highp mat4 MVPMi; //gl_ModelViewProjectionMatrixInverse
@@ -15,7 +15,7 @@ uniform highp mat4 MVMi;  // gl_ModelViewMatrixInverse
 varying mat4 VPMTInverse;
 varying mat4 VPInverse;
 varying vec3 centernormclip;
-varying vec4 IDf;  // идентификатор обрабатываемой вершины (фрагмента?)
+varying highp vec4 IDf;  // идентификатор обрабатываемой вершины (фрагмента?)
 
 void main() {
     gl_Position = MVPM * vertexAttr; // В шейдерную программу матрицу нужно передавать как есть, а в шейдере производить умножение не вектора на матрицу, а матрицы на вектор.

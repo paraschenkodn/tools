@@ -107,7 +107,7 @@ void Scene::initializeGL() {
 
     // karta
     karta = new Karta();
-    karta->IDm = ((float)1 / (float)255)*128; //0.5f; // устанавливаем ID модели
+    karta->IDm = 0.5f; //((float)1 / (float)255)*128; // устанавливаем ID модели
 
     // инициализируем свой буфер выбора FBO
     //QOpenGLFramebufferObjectFormat fboFormat;
@@ -130,15 +130,22 @@ void Scene::paintGL(){
             //fboFormat.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
             fboFormat.setInternalTextureFormat(GL_RGBA);
             QOpenGLFramebufferObject fbo(viewport.z(), viewport.w(), fboFormat);
+
+            // TODO pushGLstate()
+            glDisable(GL_LIGHTING);
+            glDisable(GL_COLOR_MATERIAL);
             fbo.bind();     // рисуем в текстуру
             paintKarta();
+            // TODO popGLstate()
+            glEnable(GL_LIGHTING);
+            glEnable(GL_COLOR_MATERIAL);
 
-            //glPixelStorei(GL_PACK_ALIGNMENT, 4);
-            //glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-            //GLfloat pix[]={0.0,0.0,0.0,0.0};
-            GLubyte pix[4];
-            glReadPixels ( pmouse.x(), viewport.w()-pmouse.y(), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pix );
-            //glReadPixels ( pmouse.x(), viewport.w()-pmouse.y(), 1, 1, GL_RGBA, GL_FLOAT, &pix );
+            glPixelStorei(GL_PACK_ALIGNMENT, 1);
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+            GLfloat pix[]={0.0,0.0,0.0,0.0};
+            //GLubyte pix[4];
+            //glReadPixels ( pmouse.x(), viewport.w()-pmouse.y(), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pix );
+            glReadPixels ( pmouse.x(), viewport.w()-pmouse.y(), 1, 1, GL_RGBA, GL_FLOAT, &pix );
             selectID.setX(pix[0]); selectID.setY(pix[1]); selectID.setZ(pix[2]);selectID.setW(pix[3]);
             qDebug() << "x - " << pmouse.x() << " y - " << viewport.w()-pmouse.y();
             qDebug() << " IDm -" << pix[0] << " IDv -" << pix[1] << " pix[2] -" << pix[2] << " pix[3] -" << pix[3];
@@ -157,6 +164,12 @@ void Scene::paintGL(){
       default:
         break;
       }
+}
+
+void Scene::setSelected(){
+    karta->m_colors[((int)selectID.y())*3]=0.0f;
+    karta->m_colors[((int)selectID.y())*3+1]=0.0f;
+    karta->m_colors[((int)selectID.y())*3+2]=1.0f;
 }
 
 void Scene::paintDM()
@@ -265,9 +278,9 @@ void Scene::paintFlatMap()
       karta->IDv.resize(karta->captions.size()*4);
       for (int i=0;i<karta->captions.size();i++) {
           karta->IDv[i*4]=karta->IDm; // ID model
-          karta->IDv[i*4+1]=((float)1 / (float)255)*i;//((float)i/(float)karta->captions.size());    // ID point ДЕЛЁННОЕ НА КОЛИЧЕСТВО ФРАГМЕНТОВ
+          karta->IDv[i*4+1]=i*0.01f; //((float)i/(float)karta->captions.size());    // ID point ДЕЛЁННОЕ НА КОЛИЧЕСТВО ФРАГМЕНТОВ
           karta->IDv[i*4+2]=0;    // reserv
-          karta->IDv[i*4+3]=1.0f;  // ==3711, что значит, что ничего не выбрано
+          karta->IDv[i*4+3]=1.0f;  //
       }
     }
 
@@ -336,12 +349,6 @@ void Scene::paintFlatMap()
           m_text->drawO(MVPM,karta->captions[i],QVector3D(karta->vertices[i*3],karta->vertices[(i*3)+1],karta->vertices[(i*3)+2]));
       }
       m_text->reset();
-}
-
-void Scene::setSelected(){
-    karta->m_colors[((int)selectID.y())*3]=0.0f;
-    karta->m_colors[((int)selectID.y())*3+1]=0.0f;
-    karta->m_colors[((int)selectID.y())*3+2]=1.0f;
 }
 
 void Scene::resizeGL(int w, int h){

@@ -7,7 +7,7 @@ varying mat4 VPMTInverse;
 varying mat4 VPInverse;
 varying vec3 centernormclip;
 
-varying vec4 IDf;  // идентификатор обрабатываемой вершины (фрагмента?)
+varying highp vec4 IDf;  // идентификатор обрабатываемой вершины (фрагмента?)
 uniform bool selectmode;  //    режим выбора true - выбор в шейдере, false - нет (selectID может не передаваться)
 uniform vec2 mouse; //  координаты выборки
 
@@ -37,10 +37,11 @@ void main(void) {
         }
     // кусок кода для выборки
     if (selectmode) {   // заполняем цветом
-        gl_FragColor.x=IDf.x; // запоминаем ИД модели объекта
-        gl_FragColor.y=IDf.y; // запоминаем ИД fragmenta
-        gl_FragColor.z=IDf.z;  // запоминаем глубину выбранного фрагмента, для последующей селекции (?? как прочитать в шейдере)
-        gl_FragColor.w=IDf.w;    // ??? а если цвет заливки такой
+        //gl_FragColor.x=IDf.x; // запоминаем ИД модели объекта
+        //gl_FragColor.y=IDf.y; // запоминаем ИД fragmenta
+        //gl_FragColor.z=IDf.z;  // запоминаем глубину выбранного фрагмента, для последующей селекции (?? как прочитать в шейдере)
+        //gl_FragColor.w=IDf.w;    // ??? а если цвет заливки такой
+        gl_FragColor=IDf;
     }
     // *****
 }
