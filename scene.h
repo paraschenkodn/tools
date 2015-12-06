@@ -29,6 +29,7 @@ public:
   ~Scene();
 
   QVector4D viewport;
+  QOpenGLFunctions_3_0 *f;
 
   // примитивы
   Triangle *m_triangle;

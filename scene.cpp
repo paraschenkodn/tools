@@ -66,7 +66,7 @@ void Scene::reset(){
 }
 
 void Scene::initializeGL() {
-       QOpenGLFunctions_3_0 *f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_0>();
+       f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_0>();
                 if ( !f ) {
                     qWarning( "Could not obtain OpenGL versions object&quot" );
                     exit( 1 );
@@ -127,18 +127,35 @@ void Scene::paintGL(){
             // инициализируем свой буфер выбора FBO
             QOpenGLFramebufferObjectFormat fboFormat;
             //fboFormat.setSamples(16); // нельзя будет иcпользовать glReadPixels
-            //fboFormat.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
-            fboFormat.setInternalTextureFormat(GL_RGBA);
+            fboFormat.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);  // нужно чтобы формирование текстуры было также с учётом теста глубины и прозрачности, как и буфер рисования основной сцены, это влияет на правильность выбора объектов при совпадении вершин
+            fboFormat.setInternalTextureFormat(GL_RGBA32F);
             QOpenGLFramebufferObject fbo(viewport.z(), viewport.w(), fboFormat);
 
             // TODO pushGLstate()
             glDisable(GL_LIGHTING);
             glDisable(GL_COLOR_MATERIAL);
+            glClearColor(0.0f,0.0f,0.0f,0.0f); //
             fbo.bind();     // рисуем в текстуру
+
+            /*GLuint texture_map;
+            glGenTextures(1, &texture_map);
+            glBindTexture(GL_TEXTURE_2D, texture_map);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F , viewport.z(), viewport.w(), 0, GL_RGBA, GL_FLOAT, NULL);
+            glBindTexture(GL_TEXTURE_2D, 0);
+            // Build the framebuffer.
+            GLuint framebuffer;
+            f->glGenFramebuffers(1, &framebuffer);
+            f->glBindFramebuffer(GL_FRAMEBUFFER, (GLuint)framebuffer);
+            f->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_map, 0);
+            GLenum status = f->glCheckFramebufferStatus(GL_FRAMEBUFFER);
+            if (status != GL_FRAMEBUFFER_COMPLETE)
+                qDebug() <<  "Error selectFBO" ;//*/
+
             paintKarta();
             // TODO popGLstate()
             glEnable(GL_LIGHTING);
             glEnable(GL_COLOR_MATERIAL);
+            glClearColor(0.1f,0.1f,0.2f,1.0f); //
 
             glPixelStorei(GL_PACK_ALIGNMENT, 1);
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -150,10 +167,16 @@ void Scene::paintGL(){
             qDebug() << "x - " << pmouse.x() << " y - " << viewport.w()-pmouse.y();
             qDebug() << " IDm -" << pix[0] << " IDv -" << pix[1] << " pix[2] -" << pix[2] << " pix[3] -" << pix[3];
 
-            QImage image(fbo.toImage());
+            /*// release selectFBO
+            f->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            f->glDeleteTextures(1,&texture_map);
+            f->glDeleteFramebuffers(1,&framebuffer);//*/
+
+            /*QImage image(fbo.toImage());
             image.save("D:\\image.png","PNG");
             QRgb pixel=image.pixel(pmouse.x(),pmouse.y());
             qDebug() << "R - " << qRed(pixel) << "G - " << qGreen(pixel) << "B - " << qBlue(pixel) << "A - " << qAlpha(pixel);
+            //*/
             fbo.release();
 
             selectmode=false;
@@ -167,9 +190,20 @@ void Scene::paintGL(){
 }
 
 void Scene::setSelected(){
-    karta->m_colors[((int)selectID.y())*3]=0.0f;
-    karta->m_colors[((int)selectID.y())*3+1]=0.0f;
-    karta->m_colors[((int)selectID.y())*3+2]=1.0f;
+  if (!selectID.w()) return;
+    float index=0.001f;                    // index должен соответствовать в функции назначения идентификаторов
+    float fi=selectID.y()/index;
+    int i= (fi<0) ? (int)ceil(fi) : (int)floor(fi);
+    float foi=oldSelectID.y()/index;
+    int oi= (foi<0) ? (int)ceil(foi) : (int)floor(foi);
+    karta->m_colors[oi*3]=1.0f;
+    karta->m_colors[oi*3+1]=0.0f;
+    karta->m_colors[oi*3+2]=0.0f;
+    karta->m_colors[i*3]=0.0f;
+    karta->m_colors[i*3+1]=0.0f;
+    karta->m_colors[i*3+2]=1.0f;
+    //qDebug() << "index i=" << i << " fi" << fi << "oi" << oi;
+    oldSelectID=selectID;
 }
 
 void Scene::paintDM()
@@ -276,9 +310,10 @@ void Scene::paintFlatMap()
 
       // готовим данные для выборки объектов (TODO убрать ограничение в 255 объектов)
       karta->IDv.resize(karta->captions.size()*4);
+      float index=0.001f;                    // index должен соответствовать функции setSelected()
       for (int i=0;i<karta->captions.size();i++) {
           karta->IDv[i*4]=karta->IDm; // ID model
-          karta->IDv[i*4+1]=i*0.01f; //((float)i/(float)karta->captions.size());    // ID point ДЕЛЁННОЕ НА КОЛИЧЕСТВО ФРАГМЕНТОВ
+          karta->IDv[i*4+1]=i*index; //((float)i/(float)karta->captions.size());    // ID point ДЕЛЁННОЕ НА КОЛИЧЕСТВО ФРАГМЕНТОВ
           karta->IDv[i*4+2]=0;    // reserv
           karta->IDv[i*4+3]=1.0f;  //
       }
@@ -539,7 +574,6 @@ QPointF Scene::pixelPosToViewPos(const QPointF& p)
 
 void Scene::mouseDoubleClickEvent(QMouseEvent *event)
 {
-    oldSelectID=selectID;
     pmouse=event->localPos();
     selectmode=true;
 }

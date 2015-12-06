@@ -6,6 +6,7 @@ CameraQuat::CameraQuat()
 reset();  // установка начальных параметров
 }
 
+// поворот от третьего лица X
 void CameraQuat::Rotate_PositionX(float angle)
 {
   ///camUp = q.rotatedVector(camUp);  // получаем развёрнутую ось вращения (от q или qr роли не играет)
@@ -15,13 +16,21 @@ void CameraQuat::Rotate_PositionX(float angle)
   rq = QQuaternion::fromAxisAndAngle(right,angle)*rq; // получаем дополнительный разворот матрицы поворота
 }
 
+// поворот от третьего лица Y
 void CameraQuat::Rotate_PositionY(float angle)
 {
+  QVector3D top;
   ///q.rotatedVector(camUp);  // получаем развёрнутую ось вращения (от q или qr роли не играет)
-  QVector3D top = camUp;
+  if (grounded) { // если используем режим "зазаемления" то вращаем исключительно паралельно "земле"
+      top = q.rotatedVector(QVector3D(0,1,0));
+    }
+  else {
+      top = camUp;
+    }
   rq = QQuaternion::fromAxisAndAngle(top,angle)*rq; // получаем дополнительный разворот матрицы поворота
 }
 
+// повороты от первого лица
 /// входящие параметры
 /// 1 - текущая точка в которой щёлкнули кнопкой (пересчитанной из экранной в координаты контекста отображения)
 /// 2 - новый кватернион или сопряженный текущей расчитанной позиции расчитанной из угловой скорости раннее
