@@ -21,8 +21,9 @@ void CameraQuat::Rotate_PositionY(float angle)
 {
   QVector3D top;
   ///q.rotatedVector(camUp);  // получаем развёрнутую ось вращения (от q или qr роли не играет)
-  if (grounded) { // если используем режим "зазаемления" то вращаем исключительно паралельно "земле"
-      top = q.rotatedVector(QVector3D(0,1,0));
+  if (grounded) { // если используем режим "заземления" то вращаем исключительно паралельно "земле"
+      //top = q.rotatedVector(QVector3D(0,1,0));
+      top = QVector3D(0,1,0);
     }
   else {
       top = camUp;

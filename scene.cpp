@@ -335,7 +335,7 @@ void Scene::paintFlatMap()
       karta->program.setUniformValue(karta->m_MVPmatrix, MVPM);
       // устанавливаем цвет линий
       karta->program.setUniformValue("colormode", true);    // рисуем одним цветом, не массивом
-      karta->program.setUniformValue("statcolor", QVector4D(0.0f,1.0f,0.0f,0.0f));
+      karta->program.setUniformValue("statcolor", QVector4D(0.0f,1.0f,0.0f,1.0f));  // c прозрачным цветом (0,0f) на ATI не рисуется
       //glLineWidth(10);
       // рисуем линии
       glDrawArrays(GL_LINES,0,karta->vertices.size()/3);

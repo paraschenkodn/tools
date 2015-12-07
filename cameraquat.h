@@ -24,7 +24,7 @@ public:
     // абсолютная позиция взгляда, является вычисляемой величиной от позиции и вектора взгляда (отсчёт от центра координат)
     QVector3D posView;
     // относительный единичный вектор, вычисляемая из кватерниона величина, вектор ориентации камеры вокруг своей оси
-    QVector3D camUp;
+    QVector3D camUp;    // вектор ориентации бокового вращения камеры (не положения верха взгляда)
     // вектор направления движения камеры, размер вектора - скорость
     QVector3D speed;
     // матрица трансформации (самера)
@@ -52,7 +52,14 @@ public:
          pView = posView-pos; // фиксируем новый вектор взгляда
         }
       CameraView.setToIdentity();
-      CameraView.lookAt(pos,posView,camUp);
+      //CameraView.lookAt(pos,posView,camUp);
+      QVector3D up;
+      if (grounded) {
+          up=QVector3D(0,1,0);  // камеру "держим" вертикально
+      } else {
+          up=camUp;
+      }
+      CameraView.lookAt(pos,posView,up);
       // позиции и вектор взгляда зафиксированы, проводим обнуление кватернионов
       q.setVector(0.0f,0.0f,0.0f);
       q.setScalar(1.0f);
@@ -62,8 +69,9 @@ public:
     /*ALL VALUES IN GRAD*/
     void turnLR(float fi){                                  // поворот от первого лица лево-право
       QVector3D top;
-      if (grounded) { // если используем режим "зазаемления" то вращаем исключительно паралельно "земле"
-          top = q.rotatedVector(QVector3D(0,1,0));  // относительный вектор вращения
+      if (grounded) { // если используем режим "заземления" то вращаем исключительно паралельно "земле"
+          //top = q.rotatedVector(QVector3D(0,1,0));  // относительный вектор вращения
+          top = QVector3D(0,1,0);
         }
       else {
         ///camUp = q.rotatedVector(camUp); // корректируем вектор вращения если уже был поворот ??? если фиксировать то всё сразу на каждом этапе, перед, или после.
@@ -88,7 +96,11 @@ public:
     void twirl(float fi){                                   // поворот от первого лица вокруг направления взгляда
       //QVector3D dir =  q.rotatedVector(QVector3D(0,0,-1));
       /// TODO pView // корректируем если был поворот
-      q=QQuaternion::fromAxisAndAngle(pView,fi)*q;
+      if (grounded) {
+          ;
+      } else {
+          q=QQuaternion::fromAxisAndAngle(pView,fi)*q;
+      }
     }
 
     void turnOX(float fi){  // поворот строго по осям системы координат (без учёта поворота самой системы координат)
