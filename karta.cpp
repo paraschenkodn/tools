@@ -1,5 +1,7 @@
 #include "karta.h"
 #include "mainwindow.h"
+#include "shphere.h"
+#include "text.h"
 
 Karta::Karta()
 {

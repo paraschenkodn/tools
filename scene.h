@@ -9,6 +9,7 @@
 #include "mapbuilder.h"
 #include "karta.h"
 #include "cameraquat.h"
+#include "level.h"
 
 #include <QOpenGLShaderProgram>
 #include <QKeyEvent>
