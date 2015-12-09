@@ -3,7 +3,7 @@
 
 MapBuilder::MapBuilder()
 {
-gridStep=0.1f;
+gridStep=0.01f;
 currentmap=FLAT_MAP;
 
 // инициализируем координатную сетку

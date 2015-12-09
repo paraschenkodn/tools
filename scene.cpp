@@ -4,12 +4,12 @@
 
 Scene::Scene(QWidget *parent) :
     QOpenGLWidget (parent),
-    step(0.01f), // шаг сдвига фигур
+    step(0.005f), // шаг сдвига фигур
     angle_x(0),
     angle_y(0),
     angle_z(0),
     perspective(true),
-    paintMode(1)
+    paintMode(TEST_MODE)
 {
   // задаём для виджета фокус, чтобы оно реагировало на кнопки
   this->setFocusPolicy(Qt::StrongFocus);
@@ -27,11 +27,7 @@ Scene::Scene(QWidget *parent) :
   //format.setProfile( QSurfaceFormat::CompatibilityProfile );//( QSurfaceFormat::NoProfile ); // NoProfile for OGL<3.2 ( QSurfaceFormat::CoreProfile ); //// ( QSurfaceFormat::CompatibilityProfile )
   setFormat( format );//*/
 
-  //  параметры камеры
-  cameraFocusAngle=90;                // устанавливаем начальный угол проекции
-  camera.pos=QVector3D(0.0f,0.0f,0.5f);
-  camera.setView(QVector3D(0.0f,0.0f,0.0f));
-  mouse_sensitivity=1.0f;
+  //  параметры камеры устанавливаются в initializeGL
 
   mbuilder=new MapBuilder();
   selectmode=false;
@@ -50,7 +46,7 @@ doneCurrent();
 }
 
 void Scene::reset(){
-    step=0.01f; // шаг сдвига фигур
+    step=0.005f; // шаг сдвига фигур
     angle_x=0;
     angle_y=0;
     angle_z=0;
@@ -58,8 +54,8 @@ void Scene::reset(){
     setFigureInfo(); //
     //  параметры камеры
     camera.reset();// сброс камеры
-    cameraFocusAngle=90;                // устанавливаем начальный угол проекции
-    camera.pos=QVector3D(0.0f,0.0f,0.5f);
+    cameraFocusAngle=40;                // устанавливаем начальный угол проекции
+    camera.pos=QVector3D(0.0f,0.0f,0.26f);
     camera.setView(QVector3D(0.0f,0.0f,0.0f));
     mouse_sensitivity=1.0f;
     setCamera(); // устанавливаем параметры камеры
@@ -102,7 +98,9 @@ void Scene::initializeGL() {
     // тект
     m_text =new Text();
 
-    setCamera(); // устанавливаем параметры камеры
+    // устанавливаем параметры камеры
+    reset();
+    setCamera();
     setFigureInfo(); //
 
     // karta
@@ -219,10 +217,12 @@ void Scene::paintDM()
 
   //инициализируем матрицы преобразований
   PM.setToIdentity();
+  float near_=0.00001f;
+  float far_=100.0f;
   if (perspective) {
       // устанавливаем трёхмерную канву (в перспективной проекции) для рисования (плоскости отсечения)
       // угол перспективы, отношение сторон, расстояние до ближней отсекающей плоскости и дальней
-      PM.perspective(cameraFocusAngle,ratio,0.1f,100.0f);  // glFrustum( xmin, xmax, ymin, ymax, near, far)  // gluPerspective(fovy, aspect, near, far)
+      PM.perspective(cameraFocusAngle,ratio,near_,far_);  // glFrustum( xmin, xmax, ymin, ymax, near, far)  // gluPerspective(fovy, aspect, near, far)
   }
   else {
       // устанавливаем трёхмерную канву (в ортогональной проекции) для рисования (плоскости отсечения)
@@ -240,6 +240,14 @@ void Scene::paintDM()
   if (!inverted)
       qDebug() << "MVPMi не конвертится";
 
+  /*/ находим обратную матрицу
+  QMatrix4x4 VInverse ( // TODO: move this one to CPU // лишний код который вычисляется на раз в сцене (не надо его считать для каждой вершины)
+          2.0f/viewport.z(), 0.0f, 0.0f, 0.0f,
+          0.0f, 2.0f/viewport.w(), 0.0f, 0.0f,
+          0.0f, 0.0f, 2.0f/(far_-near_), 0.0f,
+          -(viewport.z()+2.0f*viewport.x())/viewport.z(), -(viewport.w()+2.0f*viewport.y())/viewport.w(), -(near_+far_)/(far_-near_), 1.0f);
+  QMatrix4x4 VPInverse = PMi*VInverse;//*/
+
   // РИСУЕМ ТРЕУГОЛЬНИК
   // инициализируем данные программы матрицы и атрибуты
   m_triangle->init();
@@ -254,6 +262,8 @@ void Scene::paintDM()
   m_shphere->init();
   m_shphere->m_program->setUniformValue(m_shphere->m_matrixUniform, MVPM);
   m_shphere->m_program->setUniformValue("PMi", PMi);                          // TODO вынести в класс шфер
+    //m_shphere->m_program->setUniformValue("VPInverse", VPInverse);                          // TODO вынести в класс шфер
+    //m_shphere->m_program->setUniformValue("VInverse", VInverse);                          // TODO вынести в класс шфер
   m_shphere->m_program->setUniformValue("MVM", MVM);
   m_shphere->m_program->setUniformValue("MVPMi", MVPMi);
   m_shphere->m_program->setUniformValue("viewport",viewport);
@@ -274,7 +284,7 @@ void Scene::paintKarta()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     PM.setToIdentity();
-    PM.perspective(cameraFocusAngle,ratio,0.1f,100.0f);  // glFrustum( xmin, xmax, ymin, ymax, near, far)  // gluPerspective(fovy, aspect, near, far)
+    PM.perspective(cameraFocusAngle,ratio,0.00001f,100.0f);  // glFrustum( xmin, xmax, ymin, ymax, near, far)  // gluPerspective(fovy, aspect, near, far)
     //MVM.rotate(angle_z,0.0f,1.0f,0.0f);  // поворот вокруг оси центра координат
     //MVM=CameraView; //*MVM;  // получаем матрицу трансформации итогового вида
     MVPM=PM*MVM;

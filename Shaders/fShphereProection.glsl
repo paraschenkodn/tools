@@ -1,10 +1,12 @@
 //#version 300 es
 //precision highp float;
 
-uniform vec4 viewport;
+uniform highp vec4 viewport;
 
-varying mat4 VPMTInverse;
-varying mat4 VPInverse;
+//uniform highp mat4 VPInverse;
+varying highp mat4 VPInverse;
+
+varying highp mat4 VPMTInverse;
 varying vec3 centernormclip;
 
 varying highp vec4 IDf;  // идентификатор обрабатываемой вершины (фрагмента?)
@@ -14,8 +16,8 @@ uniform vec2 mouse; //  координаты выборки
 //layout ( pixel_center_integer ) in vec4 gl_FragCoord;  // модификатор необходим чтобы сравнивать с координатами мыши 1:1
 
 void main(void) {
-        vec4 c3 = VPMTInverse[2];
-        vec4 xpPrime = VPMTInverse*vec4(gl_FragCoord.x, gl_FragCoord.y, 0.0, 1.0);
+        highp vec4 c3 = VPMTInverse[2];
+        highp vec4 xpPrime = VPMTInverse * highp vec4(gl_FragCoord.x, gl_FragCoord.y, 0.0, 1.0);
 
         float c3TDc3 = dot(c3.xyz, c3.xyz)-c3.w*c3.w;
         float xpPrimeTDc3 = dot(xpPrime.xyz, c3.xyz)-xpPrime.w*c3.w;
@@ -28,7 +30,7 @@ void main(void) {
             float z = ((-xpPrimeTDc3-sqrt(square))/c3TDc3);
             gl_FragDepth = z;
 
-            vec4 pointclip = VPInverse*vec4(gl_FragCoord.x, gl_FragCoord.y, z, 1);
+            highp vec4 pointclip = VPInverse * highp vec4(gl_FragCoord.x, gl_FragCoord.y, z, 1);
             vec3 pointnormclip = vec3(pointclip)/pointclip.w;
 
             vec3 lightDir = normalize(vec3(gl_LightSource[0].position));
@@ -37,10 +39,6 @@ void main(void) {
         }
     // кусок кода для выборки
     if (selectmode) {   // заполняем цветом
-        //gl_FragColor.x=IDf.x; // запоминаем ИД модели объекта
-        //gl_FragColor.y=IDf.y; // запоминаем ИД fragmenta
-        //gl_FragColor.z=IDf.z;  // запоминаем глубину выбранного фрагмента, для последующей селекции (?? как прочитать в шейдере)
-        //gl_FragColor.w=IDf.w;    // ??? а если цвет заливки такой
         gl_FragColor=IDf;
     }
     // *****

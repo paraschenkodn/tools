@@ -1,6 +1,6 @@
 //#version 300 es
 
-uniform vec4 viewport;          //получаем размеры окна рисования (x0,y0,w,h)
+uniform highp vec4 viewport;          //получаем размеры окна рисования (x0,y0,w,h)
 uniform float R;    // "левые" переменные на картах ATI надо передавать через uniform
 uniform float maxpointsize; // системная величина, зависит от карты
 attribute highp vec4 vertexAttr; //
@@ -9,11 +9,13 @@ attribute highp vec4 selectID;  // идентификаторы выборки
 uniform highp mat4 MVPM;  // gl_ModelViewProjectionMatrix
 uniform highp mat4 MVM;  // gl_ModelViewMatrix
 uniform highp mat4 MVPMi; //gl_ModelViewProjectionMatrixInverse
-uniform highp mat4 PMi;  // gl_ProjectionMatrixInverse
 uniform highp mat4 MVMi;  // gl_ModelViewMatrixInverse
 
-varying mat4 VPMTInverse;
-varying mat4 VPInverse;
+//uniform highp mat4 VInverse;
+uniform highp mat4 PMi;  // gl_ProjectionMatrixInverse
+varying highp mat4 VPInverse;
+
+varying highp mat4 VPMTInverse;
 varying vec3 centernormclip;
 varying highp vec4 IDf;  // идентификатор обрабатываемой вершины (фрагмента?)
 
@@ -60,24 +62,21 @@ void main() {
     // prepare varyings
 
     // перенос в локальное пространство координат шара-точки
-    highp mat4 TInverse = mat4(
+    highp mat4 TInverse = highp mat4(
             1.0,          0.0,          0.0,         0.0,
             0.0,          1.0,          0.0,         0.0,
             0.0,          0.0,          1.0,         0.0,
             -vertexAttr.x, -vertexAttr.y, -vertexAttr.z, newR);
 
-    highp mat4 VInverse = mat4( // TODO: move this one to CPU // лишний код который вычисляется на раз в сцене (не надо его считать для каждой вершины)
-            2.0/float(viewport.z), 0.0, 0.0, 0.0,
-            0.0, 2.0/float(viewport.w), 0.0, 0.0,
-            0.0, 0.0,                   2.0/gl_DepthRange.diff, 0.0,
-            -(float(viewport.z)+2.0*float(viewport.x))/float(viewport.z), -(float(viewport.w)+2.0*float(viewport.y))/float(viewport.w), -(gl_DepthRange.near+gl_DepthRange.far)/gl_DepthRange.diff, 1.0);
+    highp mat4 VInverse = highp mat4( // TODO: move this one to CPU // лишний код который вычисляется на раз в сцене (не надо его считать для каждой вершины)
+            2.0/viewport.z, 0.0, 0.0, 0.0,
+            0.0, 2.0/viewport.w, 0.0, 0.0,
+            0.0, 0.0, 2.0/gl_DepthRange.diff, 0.0,
+            -(viewport.z+2.0*viewport.x)/viewport.z, -(viewport.w+2.0*viewport.y)/viewport.w, -(gl_DepthRange.near+gl_DepthRange.far)/gl_DepthRange.diff, 1.0);
     VPInverse = PMi*VInverse; // TODO: move to CPU
-    //VPInverse = gl_ProjectionMatrixInverse*VInverse; // TODO: move to CPU
 
     VPMTInverse = TInverse*MVPMi*VInverse;  // перемножаем с отменой видовых преобразований
-    //VPMTInverse = TInverse*gl_ModelViewProjectionMatrixInverse*VInverse;
 
     vec4 centerclip = MVM * vertexAttr;
-    //vec4 centerclip = gl_ModelViewMatrix*vertexAttr;
     centernormclip = vec3(centerclip)/centerclip.w;
 }

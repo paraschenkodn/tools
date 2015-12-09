@@ -2,14 +2,17 @@
 #define SCENE_H
 
 #include <QOpenGLWidget>
-#include "triangle.h"
-#include "pointsofsphere.h"
-#include "shphere.h"
-#include "text.h"
-#include "mapbuilder.h"
-#include "karta.h"
-#include "cameraquat.h"
+/// ---- level ----
 #include "level.h"
+#include "cameraquat.h"
+/// ---- model ----
+#include "karta.h"
+#include "mapbuilder.h"
+/// ---- primitives ----
+#include "shphere.h"
+#include "pointsofsphere.h"
+#include "text.h"
+#include "triangle.h"
 
 #include <QOpenGLShaderProgram>
 #include <QKeyEvent>
@@ -39,6 +42,7 @@ public:
   Text *m_text;
   Karta *karta;
   CameraQuat camera;
+  QVector<void *> models;
 
   // матрицы преобразований
   QMatrix4x4 LMM; // Local Model matrix (делает преобразования в локальных координатах объекта, для одного объекта их может быть несколько для разных частей объекта)
