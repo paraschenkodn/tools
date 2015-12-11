@@ -261,6 +261,7 @@ void Scene::paintDM()
   //РИСУЕМ СФЕРЫ
   m_shphere->init();
   m_shphere->m_program->setUniformValue(m_shphere->m_matrixUniform, MVPM);
+  m_shphere->m_program->setUniformValue("PM", PM);                          // TODO вынести в класс шфер
   m_shphere->m_program->setUniformValue("PMi", PMi);                          // TODO вынести в класс шфер
     //m_shphere->m_program->setUniformValue("VPInverse", VPInverse);                          // TODO вынести в класс шфер
     //m_shphere->m_program->setUniformValue("VInverse", VInverse);                          // TODO вынести в класс шфер
@@ -358,6 +359,7 @@ void Scene::paintFlatMap()
       m_shphere->setPerspective();   // устанавливаем режим рисования сфер в перспективной проекции
       m_shphere->init();             // bind program
       m_shphere->m_program->setUniformValue(m_shphere->m_matrixUniform, MVPM);
+      m_shphere->m_program->setUniformValue("PM", PM);                          // TODO вынести в класс шфер
       m_shphere->m_program->setUniformValue("PMi", PMi);                          // TODO вынести в класс шфер
       m_shphere->m_program->setUniformValue("MVM", MVM);
       m_shphere->m_program->setUniformValue("MVPMi", MVPMi);

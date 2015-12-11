@@ -1,6 +1,7 @@
 #version 120
 attribute highp vec4 vertexAttr;
-uniform mediump mat4 MVPM;  // gl_ModelViewProjectionMatrix
+uniform highp mat4 MVPM;  // gl_ModelViewProjectionMatrix
+uniform highp mat4 MVM;  // gl_ModelViewMatrix
 attribute lowp vec4 colorAttr;
 uniform float R;
 uniform float maxpointsize;
@@ -49,7 +50,6 @@ color = colorAttr;
     float screen = max(float(viewport.z), float(viewport.w));
 
     gl_PointSize = sqrt(max(discriminant_x, discriminant_y))*screen/(-r4Dr4T);
-    //gl_PointSize = viewport.w*2;
 
     // защита роста сферы от системных ограничений
     float newR=R;
@@ -58,6 +58,9 @@ color = colorAttr;
         float factor = maxpointsize/gl_PointSize;
         newR=R*factor;
     }
+
+    //vec4 centerclip = MVM * vertexAttr;
+    //centernormclip = vec3(centerclip)/centerclip.w;
 
     // temp of костыль
     radius=gl_PointSize/2;

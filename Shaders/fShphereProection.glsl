@@ -3,6 +3,7 @@
 
 uniform highp vec4 viewport;
 
+uniform highp mat4 PM;  // gl_ProjectionMatrix
 //uniform highp mat4 VPInverse;
 varying highp mat4 VPInverse;
 
