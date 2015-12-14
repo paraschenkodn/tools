@@ -219,6 +219,7 @@ void Scene::paintDM()
   PM.setToIdentity();
   float near_=0.00001f;
   float far_=100.0f;
+  glDepthRange(near_,far_);
   if (perspective) {
       // устанавливаем трёхмерную канву (в перспективной проекции) для рисования (плоскости отсечения)
       // угол перспективы, отношение сторон, расстояние до ближней отсекающей плоскости и дальней
@@ -262,6 +263,8 @@ void Scene::paintDM()
   m_shphere->init();
   m_shphere->m_program->setUniformValue(m_shphere->m_matrixUniform, MVPM);
   m_shphere->m_program->setUniformValue("PM", PM);                          // TODO вынести в класс шфер
+  //m_shphere->m_program->setUniformValue("near", near_);                          // TODO вынести в класс шфер
+  //m_shphere->m_program->setUniformValue("far", far_);                          // TODO вынести в класс шфер
   m_shphere->m_program->setUniformValue("PMi", PMi);                          // TODO вынести в класс шфер
     //m_shphere->m_program->setUniformValue("VPInverse", VPInverse);                          // TODO вынести в класс шфер
     //m_shphere->m_program->setUniformValue("VInverse", VInverse);                          // TODO вынести в класс шфер

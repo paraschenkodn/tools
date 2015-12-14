@@ -1,6 +1,8 @@
 #version 120
 uniform vec4 viewport;
 uniform highp mat4 PM;  // gl_ProjectionMatrix
+//uniform float near;
+//uniform float far;
 //varying lowp vec4 color;
 varying float radius;
 varying vec3  center;
@@ -18,13 +20,13 @@ void main(void) {
 
     vec3 current_center = center;
 
-    current_pixel = gl_FragCoord;
-            ndcPos.x = position.x / position.w;
+    current_pixel = gl_FragCoord;               // в экранных координатах
+            ndcPos.x = position.x / position.w; // переводим координаты вертекса (центра окружности) из clip соординат в NDC координаты
             ndcPos.y = position.y / position.w;
             ndcPos.z = position.z / position.w;
-            current_center.x = ndcPos.x * viewport.z/2 + (viewport.x + viewport.z/2);
-            current_center.y = ndcPos.y * viewport.w/2 + (viewport.y + viewport.w/2);
-            current_center.z = gl_DepthRange.diff/2.0 * ndcPos.z + (gl_DepthRange.near + gl_DepthRange.far)/2;
+            current_center.x = ndcPos.x * viewport.z/2.0 + (viewport.x + viewport.z/2.0);   // переводим координаты вертекса из NDC координат в экранные координаты
+            current_center.y = ndcPos.y * viewport.w/2.0 + (viewport.y + viewport.w/2.0);
+            current_center.z = (gl_DepthRange.diff/2.0) * ndcPos.z + (gl_DepthRange.near + gl_DepthRange.far)/2.0;  // координаты scene depth range
     diff = gl_FragCoord.xy - current_center.xy; //*/
 
     float d2 = dot(diff,diff);              // скалярное произведение вектора разницы на себя даёт размер умноженного вектора
@@ -37,9 +39,14 @@ void main(void) {
         vec3 l = normalize(gl_LightSource[0].position.xyz); // нормализованный вектор направления на позицию источника света
         float dr =  sqrt(r2-d2);    // размер вектора по оси Z
         vec3 n = vec3((current_pixel.xy - current_center.xy), dr);  // направление вектора нормали проходящей через текущий пиксель
-        float intensity = .2 + max(dot(l,normalize(n)), 0.0);   // как только достигается перпендикулярность и далее dot<0.0, "так наступает тёмная сторона силы" 0.2
+        float intensity = .2 + max(dot(l,normalize(n)), 0.0);   // как только достигается перпендикулярность и далее dot<=0.0, "так наступает тёмная сторона силы" 0.2
         gl_FragColor = gl_Color*intensity;
-        gl_FragDepth =  gl_FragCoord.z - dr;// - dr*gl_DepthRange.diff/2.0*gl_ProjectionMatrix[2].z;
+        float z = (position.z + (dr/gl_DepthRange.far)*2.0) / position.w;;
+        //z = gl_DepthRange.diff/2.0 * ndcPos.z + (gl_DepthRange.near + gl_DepthRange.far)/2;
+        //gl_FragDepth = gl_FragCoord.z;// - dr*gl_DepthRange.diff/2.0*gl_ProjectionMatrix[2].z;
+        z=((current_center.z+dr)/(gl_DepthRange.diff/2.0)-(gl_DepthRange.near + gl_DepthRange.far)/2.0)/200.0;
+        gl_FragDepth = gl_FragCoord.z - dr/20000000.0;
+        gl_FragDepth = gl_FragCoord.z - z;
         //gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
     }
     //gl_FragColor = gl_Color;
