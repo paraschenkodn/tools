@@ -5,7 +5,6 @@ uniform float R;    // "левые" переменные на картах ATI �
 uniform float maxpointsize; // системная величина, зависит от карты
 attribute highp vec4 vertexAttr; //
 attribute lowp vec4 colorAttr;  //
-attribute highp vec4 selectID;  // идентификаторы выборки
 uniform highp mat4 MVPM;  // gl_ModelViewProjectionMatrix
 uniform highp mat4 MVM;  // gl_ModelViewMatrix
 uniform highp mat4 MVPMi; //gl_ModelViewProjectionMatrixInverse
@@ -17,6 +16,8 @@ varying highp mat4 VPInverse;
 
 varying highp mat4 VPMTInverse;
 varying vec3 centernormclip;
+
+attribute highp vec4 selectID;  // идентификаторы выборки
 varying highp vec4 IDf;  // идентификатор обрабатываемой вершины (фрагмента?)
 
 void main() {

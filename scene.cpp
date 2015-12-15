@@ -219,7 +219,7 @@ void Scene::paintDM()
   PM.setToIdentity();
   float near_=0.00001f;
   float far_=100.0f;
-  glDepthRange(near_,far_);
+  glDepthRange(near_,far_);     // по умолчанию буфер глубины gl_DepthRange в шейдере устанавливается [0,1]
   if (perspective) {
       // устанавливаем трёхмерную канву (в перспективной проекции) для рисования (плоскости отсечения)
       // угол перспективы, отношение сторон, расстояние до ближней отсекающей плоскости и дальней
@@ -287,8 +287,11 @@ void Scene::paintDM()
 void Scene::paintKarta()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    float near_=0.00001f;
+    float far_=100.0f;
+    glDepthRange(near_,far_);     // по умолчанию буфер глубины gl_DepthRange в шейдере устанавливается [0,1]
     PM.setToIdentity();
-    PM.perspective(cameraFocusAngle,ratio,0.00001f,100.0f);  // glFrustum( xmin, xmax, ymin, ymax, near, far)  // gluPerspective(fovy, aspect, near, far)
+    PM.perspective(cameraFocusAngle,ratio,near_,far_);  // glFrustum( xmin, xmax, ymin, ymax, near, far)  // gluPerspective(fovy, aspect, near, far)
     //MVM.rotate(angle_z,0.0f,1.0f,0.0f);  // поворот вокруг оси центра координат
     //MVM=CameraView; //*MVM;  // получаем матрицу трансформации итогового вида
     MVPM=PM*MVM;

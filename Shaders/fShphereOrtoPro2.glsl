@@ -9,8 +9,14 @@ varying vec3  center;
 varying vec4  position; // with w
 varying vec3 centernormclip;
 
+varying highp vec4 IDf;  // идентификатор обрабатываемой вершины (фрагмента?)
+uniform bool selectmode;  //    режим выбора true - выбор в шейдере, false - нет (selectID может не передаваться)
+uniform vec2 mouse; //  координаты выборки
+
 void main(void) {
     vec4 ndcPos;
+    float dr;    // размер вектора по оси Z
+
     ndcPos.xy = ((gl_FragCoord.xy / viewport.zw)*2.0) - 1.0;
     ndcPos.z = (2.0 * gl_FragCoord.z - gl_DepthRange.near - gl_DepthRange.far) / (gl_DepthRange.far - gl_DepthRange.near);
     ndcPos.w = 1.0;
@@ -37,17 +43,27 @@ void main(void) {
         discard;
     } else {
         vec3 l = normalize(gl_LightSource[0].position.xyz); // нормализованный вектор направления на позицию источника света
-        float dr =  sqrt(r2-d2);    // размер вектора по оси Z
+        dr =  sqrt(r2-d2);    // размер вектора по оси Z
         vec3 n = vec3((current_pixel.xy - current_center.xy), dr);  // направление вектора нормали проходящей через текущий пиксель
         float intensity = .2 + max(dot(l,normalize(n)), 0.0);   // как только достигается перпендикулярность и далее dot<=0.0, "так наступает тёмная сторона силы" 0.2
         gl_FragColor = gl_Color*intensity;
         float z = (position.z + (dr/gl_DepthRange.far)*2.0) / position.w;;
         //z = gl_DepthRange.diff/2.0 * ndcPos.z + (gl_DepthRange.near + gl_DepthRange.far)/2;
         //gl_FragDepth = gl_FragCoord.z;// - dr*gl_DepthRange.diff/2.0*gl_ProjectionMatrix[2].z;
-        z=((current_center.z+dr)/(gl_DepthRange.diff/2.0)-(gl_DepthRange.near + gl_DepthRange.far)/2.0)/200.0;
+        z=((current_center.z+dr)/(gl_DepthRange.diff/2.0)-(gl_DepthRange.near + gl_DepthRange.far)/2.0)/2.0;
         gl_FragDepth = gl_FragCoord.z - dr/20000000.0;
-        gl_FragDepth = gl_FragCoord.z - z;
+        gl_FragDepth = current_center.z - dr;
         //gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
     }
+    // кусок кода для выборки
+    if (selectmode) {   // заполняем цветом
+        gl_FragColor=IDf;
+        //debug
+        gl_FragColor.x = dr;
+        gl_FragColor.y = current_center.z;
+        gl_FragColor.z = gl_FragCoord.z;
+        //*///debug
+    }
+    // *****
     //gl_FragColor = gl_Color;
 }

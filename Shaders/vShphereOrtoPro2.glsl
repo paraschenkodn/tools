@@ -19,11 +19,15 @@ varying vec3  center;
 varying vec4  position;
 // end kostyele
 
+attribute highp vec4 selectID;  // идентификаторы выборки
+varying highp vec4 IDf;  // идентификатор обрабатываемой вершины (фрагмента?)
+
 void main()
 {
 gl_Position = MVPM * vertexAttr; // первоначальное положение , затем будем трансформировать с учётом перспективного искажения шара
 gl_FrontColor = colorAttr;
 color = colorAttr;
+IDf=selectID;
 
     mat4 T = mat4(
             1.0, 0.0, 0.0, 0.0,
