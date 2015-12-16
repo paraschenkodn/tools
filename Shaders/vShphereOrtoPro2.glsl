@@ -2,6 +2,8 @@
 attribute highp vec4 vertexAttr;    //
 attribute lowp vec4 colorAttr;
 uniform highp mat4 MVPM;  // gl_ModelViewProjectionMatrix
+uniform highp mat4 PM;  // gl_ProjectionMatrix
+uniform highp mat4 PMi;  // gl_ProjectionMatrixInverse
 uniform float R;    // радиус сферы
 //uniform float maxpointsize; // системная величина, зависит от карты (возможно только для старых ATI)
 uniform vec4 viewport; // //получаем размеры окна рисования (x0,y0,w,h)
@@ -11,6 +13,7 @@ varying highp vec4 IDf;  // идентификатор обрабатываем�
 
 varying float radius;   // расчитанный радиус сферы в точке перспективонй проекции
 varying vec4  position; // координаты центра сферы (вершины)
+varying vec4  positionRZ; // координаты поверхности сферы по оси Z
 
 void main()
 {
@@ -53,4 +56,8 @@ IDf=selectID;
 
     radius=gl_PointSize/2;
     position=gl_Position;
+
+    vec4 pos2 = PMi * gl_Position;
+    positionRZ = PM * vec4(pos2.x,pos2.y,pos2.z+R,pos2.w);
+    //radius=positionRZ.z-gl_Position.z;
 }

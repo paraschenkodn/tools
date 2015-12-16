@@ -55,7 +55,7 @@ void Scene::reset(){
     //  параметры камеры
     camera.reset();// сброс камеры
     cameraFocusAngle=40;                // устанавливаем начальный угол проекции
-    camera.pos=QVector3D(0.0f,0.0f,1.26f);
+    camera.pos=QVector3D(0.0f,0.0f,0.26f);
     camera.setView(QVector3D(0.0f,0.0f,0.0f));
     mouse_sensitivity=1.0f;
     setCamera(); // устанавливаем параметры камеры
@@ -99,7 +99,7 @@ void Scene::initializeGL() {
     m_text =new Text();
 
     // устанавливаем параметры сцены
-    near_=0.00001f;
+    near_=0.001f;
     far_=100.0f;
     range=far_-near_;
 
@@ -121,10 +121,10 @@ void Scene::initializeGL() {
 
 void Scene::paintGL(){
     switch (paintMode){ // 1- devmode 2- prommode
-      case 1:
+      case TEST_MODE:
         paintDM();      // test
         break;
-      case 2:
+      case KARTA_MODE:
         setStates();     // включаем буфер глубины, свет и прочее (возможно можно вынести в initGL)
         if (selectmode) {
             // инициализируем свой буфер выбора FBO
@@ -339,27 +339,26 @@ void Scene::paintFlatMap()
   //karta->draw();
 
   // РИСУЕМ ЛИНИИ
-    //подключаем программу и проверяем
-    if (!karta->program.bind()){
-        qWarning("KARTA. Line. Шейдеры не сбиндились");
-        return;
-    }
-    // устанавливаем место хранения координат
-      karta->program.setAttributeArray(karta->m_vertexAttr, karta->vertices.data(), 3);
-      // активируем массивы
-      karta->program.enableAttributeArray(karta->m_vertexAttr);
-      // зaпихиваем в его программу матрицу ориентации
-      karta->program.setUniformValue(karta->m_MVPmatrix, MVPM);
-      // устанавливаем цвет линий
-      karta->program.setUniformValue("colormode", true);    // рисуем одним цветом, не массивом
-      karta->program.setUniformValue("statcolor", QVector4D(0.0f,1.0f,0.0f,1.0f));  // c прозрачным цветом (0,0f) на ATI не рисуется
-      //glLineWidth(10);
-      // рисуем линии
-      glDrawArrays(GL_LINES,0,karta->vertices.size()/3);
-      // деактивируем массивы
-      karta->program.disableAttributeArray(karta->m_vertexAttr);
-      // очищаем программу
-      karta->program.release();
+  //подключаем программу и проверяем
+  if (!karta->program.bind()){
+      qWarning("KARTA. Line. Шейдеры не сбиндились");
+      return;
+  }
+  // устанавливаем место хранения координат
+    karta->program.setAttributeArray(karta->m_vertexAttr, karta->vertices.data(), 3);
+    // активируем массивы
+    karta->program.enableAttributeArray(karta->m_vertexAttr);
+    // зaпихиваем в программу матрицу ориентации
+    karta->program.setUniformValue(karta->m_MVPmatrix, MVPM);
+    // устанавливаем цвет линий
+    //karta->program.setUniformValue("colormode", true);    // рисуем одним цветом, не массивом
+    karta->program.setUniformValue("statcolor", QVector4D(0.0f,1.0f,0.0f,1.0f));  //
+    // рисуем линии
+    glDrawArrays(GL_LINES,0,karta->vertices.size()/3);
+    // деактивируем массивы
+    karta->program.disableAttributeArray(karta->m_vertexAttr);
+    // очищаем программу
+    karta->program.release();
 
       //РИСУЕМ СФЕРЫ
       m_shphere->setPerspective();   // устанавливаем режим рисования сфер в перспективной проекции

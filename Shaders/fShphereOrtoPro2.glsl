@@ -1,11 +1,8 @@
 //#version 120
-//uniform highp mat4 PM;  // gl_ProjectionMatrix
 uniform vec4 viewport;
 varying float radius;
 varying vec4  position; // with w
-//uniform float near;
-//uniform float far;
-uniform float range;
+varying vec4  positionRZ; // координаты поверхности сферы по оси Z
 
 varying highp vec4 IDf;  // идентификатор обрабатываемой вершины (фрагмента?)
 uniform bool selectmode;  //    режим выбора true - выбор в шейдере, false - нет (selectID может не передаваться)
@@ -17,8 +14,6 @@ void main(void) {
     vec4 current_pixel;  // в экранных координатах
     vec2 diff;  // разница векторов между точкой и центром
     vec3 current_center;
-    //float gl_FragCoord_z=gl_FragCoord.z;
-    float z;
 
     current_pixel = gl_FragCoord;
     ndcPos.x = position.x / position.w; // переводим координаты вертекса (центра окружности) из clip соординат в NDC координаты
@@ -40,15 +35,12 @@ void main(void) {
         vec3 n = vec3((current_pixel.xy - current_center.xy), dr);  // направление вектора нормали проходящей через текущий пиксель от центра сферы
         float intensity = .2 + max(dot(l,normalize(n)), 0.0);   // как только достигается перпендикулярность и далее dot<=0.0, "так наступает тёмная сторона силы" =0.2
         gl_FragColor = gl_Color*intensity;
-
-        z=(gl_DepthRange.diff/2.0) * (ndcPos.z-(dr/range)) + (gl_DepthRange.near + gl_DepthRange.far)/2.0;
-        gl_FragDepth = z;
-
+        gl_FragDepth=(gl_DepthRange.diff/2.0) * (ndcPos.z-(ndcPos.z-positionRZ.z/positionRZ.w)*(dr/radius)) + (gl_DepthRange.near + gl_DepthRange.far)/2.0;
     }
     // кусок кода для выборки
     if (selectmode) {   // заполняем цветом выборки объекта
         gl_FragColor=IDf;
-        //debug
+        /*/debug
         gl_FragColor.x = dr;
         gl_FragColor.y = z;
         gl_FragColor.z = gl_FragCoord.z;

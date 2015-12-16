@@ -235,7 +235,7 @@ void Triangle::drawGrid()
     m_program.enableAttributeArray(m_colorAttr);
 
     // рисуем линии
-    glLineWidth(10);
+    glLineWidth(3);
     glDrawArrays(GL_LINES,0,vaxises.size()/3);
 
     // деактивируем массивы

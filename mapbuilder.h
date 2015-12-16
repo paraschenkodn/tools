@@ -37,8 +37,8 @@ public:
     void fmapToVertices();                          // сброс координатной сетки в координаты вершин
     void flatMapPairHostsSt();                          // TODO картирование напрямую в координатной сетке, без использования массива fmap
     QVector< QVector<QString> > fmap;   // координатная сетка точек (индексов точек пар) служит для построения
-    float gridStep;     // шаг сетки координат
-    int sizefmap;   // размер координатной сетки
+    float gridStep;     // расстояние между узлами
+    int sizefmap;   // размер условной координатной сетки
     void resizemap()
     {
         fmap.resize(sizefmap);

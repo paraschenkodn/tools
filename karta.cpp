@@ -8,9 +8,16 @@ Karta::Karta()
     /// подготавливаем прорисовку линий
     // инициализируем шейдеры
     QOpenGLShader vShader(QOpenGLShader::Vertex);
-    vShader.compileSourceFile(":/Shaders/vShader.glsl");
+    vShader.compileSourceCode("attribute highp vec4 vertexAttr;" // входной аттрибут для координат вершин
+                              "uniform mediump mat4 MVPM;"        // матрица положения средней точности задающая позицию вершин
+                              "void main () {"
+                                  "gl_Position = MVPM * vertexAttr;" // устанавливаем позицию вершин через матрицу
+                              "}");
     QOpenGLShader fShader(QOpenGLShader::Fragment);
-    fShader.compileSourceFile(":/Shaders/fShader.glsl");
+    fShader.compileSourceCode("uniform lowp vec4 statcolor;"  // статичный цвет рисования (aka glColor)
+                              "void main () {"
+                                  "gl_FragColor = statcolor;" // просто принимаем значение без обработки
+                              "}");
     program.addShader(&vShader);
     program.addShader(&fShader);
     if (!program.link()){
