@@ -33,6 +33,7 @@ public:
   ~Scene();
 
   QVector4D viewport;
+  float near_, far_, range;
   QOpenGLFunctions_3_0 *f;
 
   // примитивы

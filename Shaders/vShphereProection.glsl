@@ -1,8 +1,8 @@
 //#version 300 es
 
 uniform highp vec4 viewport;          //получаем размеры окна рисования (x0,y0,w,h)
-uniform float R;    // "левые" переменные на картах ATI надо передавать через uniform
-uniform float maxpointsize; // системная величина, зависит от карты
+uniform float R;    // "левые" переменные на картах ATI (возможно только старых) надо передавать через uniform
+uniform float maxpointsize; // системная величина, зависит от карты (возможно только для старых ATI)
 attribute highp vec4 vertexAttr; //
 attribute lowp vec4 colorAttr;  //
 uniform highp mat4 MVPM;  // gl_ModelViewProjectionMatrix

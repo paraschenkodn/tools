@@ -55,7 +55,7 @@ void Scene::reset(){
     //  параметры камеры
     camera.reset();// сброс камеры
     cameraFocusAngle=40;                // устанавливаем начальный угол проекции
-    camera.pos=QVector3D(0.0f,0.0f,0.26f);
+    camera.pos=QVector3D(0.0f,0.0f,1.26f);
     camera.setView(QVector3D(0.0f,0.0f,0.0f));
     mouse_sensitivity=1.0f;
     setCamera(); // устанавливаем параметры камеры
@@ -97,6 +97,11 @@ void Scene::initializeGL() {
 
     // тект
     m_text =new Text();
+
+    // устанавливаем параметры сцены
+    near_=0.00001f;
+    far_=100.0f;
+    range=far_-near_;
 
     // устанавливаем параметры камеры
     reset();
@@ -163,7 +168,7 @@ void Scene::paintGL(){
             glReadPixels ( pmouse.x(), viewport.w()-pmouse.y(), 1, 1, GL_RGBA, GL_FLOAT, &pix );
             selectID.setX(pix[0]); selectID.setY(pix[1]); selectID.setZ(pix[2]);selectID.setW(pix[3]);
             qDebug() << "x - " << pmouse.x() << " y - " << viewport.w()-pmouse.y();
-            qDebug() << " IDm -" << pix[0] << " IDv -" << pix[1] << " pix[2] -" << pix[2] << " pix[3] -" << pix[3];
+            qDebug() << " dr-" << pix[0] << ", current_center.z-" << pix[1] << ", gl_FragCoord.z-" << pix[2] << ", pix[3]-" << pix[3];
 
             /*// release selectFBO
             f->glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -217,9 +222,6 @@ void Scene::paintDM()
 
   //инициализируем матрицы преобразований
   PM.setToIdentity();
-  float near_=0.00001f;
-  float far_=100.0f;
-  glDepthRange(near_,far_);     // по умолчанию буфер глубины gl_DepthRange в шейдере устанавливается [0,1]
   if (perspective) {
       // устанавливаем трёхмерную канву (в перспективной проекции) для рисования (плоскости отсечения)
       // угол перспективы, отношение сторон, расстояние до ближней отсекающей плоскости и дальней
@@ -265,6 +267,7 @@ void Scene::paintDM()
   m_shphere->m_program->setUniformValue("PM", PM);                          // TODO вынести в класс шфер
   //m_shphere->m_program->setUniformValue("near", near_);                          // TODO вынести в класс шфер
   //m_shphere->m_program->setUniformValue("far", far_);                          // TODO вынести в класс шфер
+  m_shphere->m_program->setUniformValue("range", range);                          // TODO вынести в класс шфер
   m_shphere->m_program->setUniformValue("PMi", PMi);                          // TODO вынести в класс шфер
     //m_shphere->m_program->setUniformValue("VPInverse", VPInverse);                          // TODO вынести в класс шфер
     //m_shphere->m_program->setUniformValue("VInverse", VInverse);                          // TODO вынести в класс шфер
@@ -287,9 +290,6 @@ void Scene::paintDM()
 void Scene::paintKarta()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    float near_=0.00001f;
-    float far_=100.0f;
-    glDepthRange(near_,far_);     // по умолчанию буфер глубины gl_DepthRange в шейдере устанавливается [0,1]
     PM.setToIdentity();
     PM.perspective(cameraFocusAngle,ratio,near_,far_);  // glFrustum( xmin, xmax, ymin, ymax, near, far)  // gluPerspective(fovy, aspect, near, far)
     //MVM.rotate(angle_z,0.0f,1.0f,0.0f);  // поворот вокруг оси центра координат
@@ -370,6 +370,9 @@ void Scene::paintFlatMap()
       m_shphere->m_program->setUniformValue("MVM", MVM);
       m_shphere->m_program->setUniformValue("MVPMi", MVPMi);
       m_shphere->m_program->setUniformValue("viewport",viewport);
+      //m_shphere->m_program->setUniformValue("near", near_);                          // TODO вынести в класс шфер
+      //m_shphere->m_program->setUniformValue("far", far_);                          // TODO вынести в класс шфер
+      m_shphere->m_program->setUniformValue("range", range);                          // TODO вынести в класс шфер
 
       //shpheres->draw();
       m_shphere->m_program->setAttributeArray(m_shphere->m_vertexAttr, karta->vertices.data(), 3);
