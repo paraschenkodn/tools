@@ -168,7 +168,7 @@ void Scene::paintGL(){
             glReadPixels ( pmouse.x(), viewport.w()-pmouse.y(), 1, 1, GL_RGBA, GL_FLOAT, &pix );
             selectID.setX(pix[0]); selectID.setY(pix[1]); selectID.setZ(pix[2]);selectID.setW(pix[3]);
             qDebug() << "x - " << pmouse.x() << " y - " << viewport.w()-pmouse.y();
-            qDebug() << " dr-" << pix[0] << ", current_center.z-" << pix[1] << ", gl_FragCoord.z-" << pix[2] << ", pix[3]-" << pix[3];
+            qDebug() << "pix[0]" << pix[0] << ", pix[1]-" << pix[1] << ", pix[2]-" << pix[2] << ", pix[3]-" << pix[3];
 
             /*// release selectFBO
             f->glBindFramebuffer(GL_FRAMEBUFFER, 0);
