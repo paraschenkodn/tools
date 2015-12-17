@@ -135,7 +135,10 @@ public:
 
     // приближение-удаление камеры (это не зум)
     void distanceUD(float dist) {
+        bool tmp=strato;
+        strato=false;
         moveFB(dist);
+        strato=tmp;
         setView(posView);   // вычисляем новый pView
     }
 
