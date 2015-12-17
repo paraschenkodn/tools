@@ -483,19 +483,19 @@ void Scene::addMap()
 void Scene::keyPressEvent(QKeyEvent *event)
 {
   if (event->modifiers() & Qt::ShiftModifier) {
-      camera.strated=true;  // режим парящей камеры
+      camera.strato=true;  // режим парящей камеры
       emit setBar(QString("strated=true"));
     }
   else {
-      camera.strated=false;
+      camera.strato=false;
       emit setBar(QString("strated=false"));
     }
   switch (event->key()) {
     case Qt::Key_Up:
-      camera.moveUD(step);
+      camera.moveFB(step);
       break;
     case Qt::Key_Down:
-      camera.moveUD(-step);
+      camera.moveFB(-step);
       break;
     case Qt::Key_Left:
       camera.moveLR(-step);
@@ -594,25 +594,34 @@ QPointF Scene::pixelPosToViewPos(const QPointF& p)
 
 void Scene::mouseDoubleClickEvent(QMouseEvent *event)
 {
-    pmouse=event->localPos();
-    selectmode=true;
+    if (event->button() & Qt::LeftButton) {
+        selectmode=selectmode;
+    }
 }
 
 void Scene::mousePressEvent(QMouseEvent *event)
 {
     if (event->buttons() & Qt::LeftButton) {
        camera.push(pixelPosToViewPos(event->localPos()));
+       preSelectMode=true;  // ждём возможно выборку, а не перемещение
     }
 }
 
 void Scene::mouseReleaseEvent(QMouseEvent *event)
 {
-  if (event) step=step;
+  if (event->button() & Qt::LeftButton) {
+      if (preSelectMode) {
+          preSelectMode=false;
+          pmouse=event->localPos();    // координаты выборки
+          selectmode=true;
+      }
+  }
 }
 
 void Scene::mouseMoveEvent(QMouseEvent *event)
 {
   if (event->buttons() & Qt::LeftButton) {
+      preSelectMode=false;  // выборки не будет, - перемещение
      camera.moveByMouse(pixelPosToViewPos(event->localPos()));
      setCamera();
   }
@@ -636,8 +645,9 @@ void Scene::wheelEvent(QWheelEvent *event)
 // шаг колеса обычно 120 едениц, 1 еденица это 1/8 градуса, значит 1 шаг = 15 градусам.
 // мы будем считать в еденицах (некоторые драйвера мыши дают точность больше, т.е. меньше 120 за такт)
 // move to new position by step 120/10000 пока только по оси Z (-delta - значит крутим на себя)
-camera.moveFB((float)event->angleDelta().y()/10000);
-setCamera();
+//camera.moveFB((float)event->angleDelta().y()/10000);
+    camera.distanceUD((float)event->angleDelta().y()/10000);
+    setCamera();
 }
 
 void Scene::setCamera() {

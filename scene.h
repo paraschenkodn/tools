@@ -62,6 +62,7 @@ public:
   QVector4D selectID;   // выбранный объект (ID модели, ID vertex, 0, result) if result==3711 - nothing selected
   QVector4D oldSelectID;
   bool selectmode;  // true - выбираем в следующем кадре объект в шейдере, false - нет
+  bool preSelectMode;  // true - ожидание подтверждения включения выборки, false - нет
   QPointF pmouse;    // точка выборки
 
   // TEST
