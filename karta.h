@@ -1,11 +1,19 @@
 #ifndef KARTA_H
 #define KARTA_H
 
+#include "scene.h"
+#include "level.h"
+
+#include "mapbuilder.h"
+
+/// примитивы
 #include "shphere.h"
+#include "pointsofsphere.h"
 #include "text.h"
 
 #include <QOpenGLTexture>
 #include <QOpenGLShaderProgram>  // объявляем для передачи шейдерных программ в объект
+
 
 class Karta
 {
@@ -16,6 +24,9 @@ public:
   void set();
   void draw(); // рисуем карту
   void reset();
+
+  // model part
+  QVector<void *> primitives;
 
   std::vector<float> vertices; // создаём вектор (контейнер хранения) координат вершин
   std::vector<float> m_colors; // создаём вектор (контейнер хранения) координат цветов
@@ -33,6 +44,8 @@ public:
 
   shphere *shpheres;
   Text *texts;
+
+  void paintFlatMap();
 };
 
 #endif // KARTA_H

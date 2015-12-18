@@ -36,14 +36,19 @@ public:
   float near_, far_, range;
   QOpenGLFunctions_3_0 *f;
 
+  // level part
+  CameraQuat camera;
+  QVector<void *> models;
+
+  // модели
+  Karta *karta;
+  QVector<void *> primitives;
+
   // примитивы
   Triangle *m_triangle;
   shphere *m_shphere;
   pointsofsphere *spherepoints;
   Text *m_text;
-  Karta *karta;
-  CameraQuat camera;
-  QVector<void *> models;
 
   // матрицы преобразований
   QMatrix4x4 LMM; // Local Model matrix (делает преобразования в локальных координатах объекта, для одного объекта их может быть несколько для разных частей объекта)
