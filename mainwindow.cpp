@@ -10,7 +10,7 @@ MainWindow::MainWindow(QWidget *parent) :
   connect(ui->action,SIGNAL(toggled(bool)),this,SLOT(toPaintModeDM()));         // установка режима рисования
   connect(ui->action_2,SIGNAL(toggled(bool)),this,SLOT(toPaintModeKarta()));    // установка режима рисования
   connect(this,SIGNAL(setPaintMode(int)),ui->SceneWidget,SLOT(setPaintMode(int)));  // установка режима рисования в сцену
-  connect(ui->SceneWidget,SIGNAL(setPerspectiveInfo(QString)),ui->label,SLOT(setText(QString)));    // отображение информации со сцены
+  connect(ui->SceneWidget->currentLevel,SIGNAL(setCameraInfo(QString)),ui->label,SLOT(setText(QString)));    // отображение информации со сцены
   connect(ui->SceneWidget,SIGNAL(setFiguresInfo(QString)),ui->label_2,SLOT(setText(QString)));      // отображение информации со сцены
   connect(ui->SceneWidget,SIGNAL(setFiguresInfo2(QString)),ui->label_4,SLOT(setText(QString)));     // отображение информации со сцены
   connect(ui->SceneWidget,SIGNAL(setBar(QString)),ui->statusBar,SLOT(showMessage(QString)));     // отображение индикаторов состояния

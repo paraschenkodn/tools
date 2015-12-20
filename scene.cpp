@@ -5,9 +5,6 @@
 Scene::Scene(QWidget *parent) :
     QOpenGLWidget (parent),
     step(0.005f), // шаг сдвига фигур
-    angle_x(0),
-    angle_y(0),
-    angle_z(0),
     perspective(true),
     paintMode(TEST_MODE)
 {
@@ -29,7 +26,6 @@ Scene::Scene(QWidget *parent) :
 
   //  параметры камеры устанавливаются в initializeGL
 
-  mbuilder=new MapBuilder();
   selectmode=false;
 }
 
@@ -41,24 +37,21 @@ delete m_triangle;
 delete m_shphere;
 delete m_text;
 delete karta;
+for (uint i=0;i<levels.size();i++) {
+    delete levels[i];
+  }
 doneCurrent();
 //delete mbuilder;
 }
 
 void Scene::reset(){
     step=0.005f; // шаг сдвига фигур
-    angle_x=0;
-    angle_y=0;
     angle_z=0;
     perspective=true;
     setFigureInfo(); //
     //  параметры камеры
-    camera.reset();// сброс камеры
-    cameraFocusAngle=40;                // устанавливаем начальный угол проекции
-    camera.pos=QVector3D(0.0f,0.0f,0.26f);
-    camera.setView(QVector3D(0.0f,0.0f,0.0f));
+    currentLevel->reset();  // init level, init camera
     mouse_sensitivity=1.0f;
-    setCamera(); // устанавливаем параметры камеры
 }
 
 void Scene::initializeGL() {
@@ -98,29 +91,26 @@ void Scene::initializeGL() {
     // тект
     m_text =new Text();
 
-    // устанавливаем параметры сцены
-    near_=0.001f;
-    far_=100.0f;
-    range=far_-near_;
-
-    // устанавливаем параметры камеры
-    reset();
-    setCamera();
-    setFigureInfo(); //
-
     // karta
     karta = new Karta();
-    karta->IDm = 0.5f; //((float)1 / (float)255)*128; // устанавливаем ID модели
+    karta->smap.IDm = 0.5f; //((float)1 / (float)255)*128; // устанавливаем ID модели
 
     // инициализируем свой буфер выбора FBO
     //QOpenGLFramebufferObjectFormat fboFormat;
     //fboFormat.setSamples(4);
     //fboFormat.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
     //fbo= new QOpenGLFramebufferObject(viewport.z*viewport.w*4);
+
+    // levels (load and initialize)
+    currentLevel = new Level();
+    { int size; size=levels.size(); levels.resize(size+1); levels[size]=currentLevel;}
+    karta->level=currentLevel;
+
+    setFigureInfo(); //
 }
 
 void Scene::paintGL(){
-    switch (paintMode){ // 1- devmode 2- prommode
+    switch (paintMode){
       case TEST_MODE:
         paintDM();      // test
         break;
@@ -132,7 +122,7 @@ void Scene::paintGL(){
             //fboFormat.setSamples(16); // нельзя будет иcпользовать glReadPixels
             fboFormat.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);  // нужно чтобы формирование текстуры было также с учётом теста глубины и прозрачности, как и буфер рисования основной сцены, это влияет на правильность выбора объектов при совпадении вершин
             fboFormat.setInternalTextureFormat(GL_RGBA32F);
-            QOpenGLFramebufferObject fbo(viewport.z(), viewport.w(), fboFormat);
+            QOpenGLFramebufferObject fbo(currentLevel->viewport.z(), currentLevel->viewport.w(), fboFormat);
 
             // TODO pushGLstate()
             glDisable(GL_LIGHTING);
@@ -154,20 +144,20 @@ void Scene::paintGL(){
             if (status != GL_FRAMEBUFFER_COMPLETE)
                 qDebug() <<  "Error selectFBO" ;//*/
 
-            paintKarta();
+            paintKarta(DRAW_SFBO);
             // TODO popGLstate()
             glEnable(GL_LIGHTING);
             glEnable(GL_COLOR_MATERIAL);
             glClearColor(0.1f,0.1f,0.2f,1.0f); //
 
-            glPixelStorei(GL_PACK_ALIGNMENT, 1);
-            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+            //glPixelStorei(GL_PACK_ALIGNMENT, 1);
+            //glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
             GLfloat pix[]={0.0,0.0,0.0,0.0};
             //GLubyte pix[4];
             //glReadPixels ( pmouse.x(), viewport.w()-pmouse.y(), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pix );
-            glReadPixels ( pmouse.x(), viewport.w()-pmouse.y(), 1, 1, GL_RGBA, GL_FLOAT, &pix );
+            glReadPixels ( pmouse.x(), currentLevel->viewport.w()-pmouse.y(), 1, 1, GL_RGBA, GL_FLOAT, &pix );
             selectID.setX(pix[0]); selectID.setY(pix[1]); selectID.setZ(pix[2]);selectID.setW(pix[3]);
-            qDebug() << "x - " << pmouse.x() << " y - " << viewport.w()-pmouse.y();
+            qDebug() << "x - " << pmouse.x() << " y - " << currentLevel->viewport.w()-pmouse.y();
             qDebug() << "pix[0]" << pix[0] << ", pix[1]-" << pix[1] << ", pix[2]-" << pix[2] << ", pix[3]-" << pix[3];
 
             /*// release selectFBO
@@ -185,7 +175,7 @@ void Scene::paintGL(){
             selectmode=false;
             setSelected();
         }
-        paintKarta();   //
+        paintKarta(DRAW_NORM);
         break;
       default:
         break;
@@ -199,14 +189,32 @@ void Scene::setSelected(){
     int i= (fi<0) ? (int)ceil(fi) : (int)floor(fi);
     float foi=oldSelectID.y()/index;
     int oi= (foi<0) ? (int)ceil(foi) : (int)floor(foi);
-    karta->m_colors[oi*3]=1.0f;
-    karta->m_colors[oi*3+1]=0.0f;
-    karta->m_colors[oi*3+2]=0.0f;
-    karta->m_colors[i*3]=0.0f;
-    karta->m_colors[i*3+1]=0.0f;
-    karta->m_colors[i*3+2]=1.0f;
+    karta->smap.m_colors[oi*3]=1.0f;
+    karta->smap.m_colors[oi*3+1]=0.0f;
+    karta->smap.m_colors[oi*3+2]=0.0f;
+    karta->smap.m_colors[i*3]=0.0f;
+    karta->smap.m_colors[i*3+1]=0.0f;
+    karta->smap.m_colors[i*3+2]=1.0f;
     //qDebug() << "index i=" << i << " fi" << fi << "oi" << oi;
     oldSelectID=selectID;
+}
+
+void Scene::paintKarta(int draw_law) {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    currentLevel->PM.setToIdentity();
+    currentLevel->PM.perspective(currentLevel->cameraFocusAngle,currentLevel->ratio,currentLevel->near_,currentLevel->far_);  // glFrustum( xmin, xmax, ymin, ymax, near, far)  // gluPerspective(fovy, aspect, near, far)
+    currentLevel->MVPM=currentLevel->PM*currentLevel->MVM;
+
+    // находим проекционную инверсную мтрицу
+    bool inverted;
+    currentLevel->PMi=currentLevel->PM.inverted(&inverted);
+    if (!inverted)
+        qDebug() << "PMi не конвертится";
+    currentLevel->MVPMi=currentLevel->MVPM.inverted(&inverted);
+    if (!inverted)
+        qDebug() << "MVPMi не конвертится";
+
+    if (karta->mbuilder->currentmap==FLAT_MAP) karta->paintFlatMap(draw_law);
 }
 
 void Scene::paintDM()
@@ -221,25 +229,25 @@ void Scene::paintDM()
   //glMatrixMode(GL_MODELVIEW);
 
   //инициализируем матрицы преобразований
-  PM.setToIdentity();
+  currentLevel->PM.setToIdentity();
   if (perspective) {
       // устанавливаем трёхмерную канву (в перспективной проекции) для рисования (плоскости отсечения)
       // угол перспективы, отношение сторон, расстояние до ближней отсекающей плоскости и дальней
-      PM.perspective(cameraFocusAngle,ratio,near_,far_);  // glFrustum( xmin, xmax, ymin, ymax, near, far)  // gluPerspective(fovy, aspect, near, far)
+      currentLevel->PM.perspective(currentLevel->cameraFocusAngle,currentLevel->ratio,currentLevel->near_,currentLevel->far_);  // glFrustum( xmin, xmax, ymin, ymax, near, far)  // gluPerspective(fovy, aspect, near, far)
   }
   else {
       // устанавливаем трёхмерную канву (в ортогональной проекции) для рисования (плоскости отсечения)
-      PM.ortho(-viewport.z()/viewport.w()*2,viewport.z()/viewport.w()*2,-2.0f,2.0f,-8.0f,8.0f); // glOrtho(left,right,bottom,top,near,far) // увеличение значений уменьшает фигуры на сцене (по Z задаём больше, чтобы не видеть отсечение фигур)
+      currentLevel->PM.ortho(-currentLevel->viewport.z() / currentLevel->viewport.w()*2, currentLevel->viewport.z() / currentLevel->viewport.w()*2,-2.0f,2.0f,-8.0f,8.0f); // glOrtho(left,right,bottom,top,near,far) // увеличение значений уменьшает фигуры на сцене (по Z задаём больше, чтобы не видеть отсечение фигур)
       // переносим по z дальше, обязательное условие для перспективной проекции // по оси z 0 это "глаз", - движение камеры назад, + вперёд.
   }
-  MVPM=PM*MVM;
+  currentLevel->MVPM=currentLevel->PM*currentLevel->MVM;
 
   // находим проекционную инверсную мтрицу
   bool inverted;
-  PMi=PM.inverted(&inverted);
+  currentLevel->PMi=currentLevel->PM.inverted(&inverted);
   if (!inverted)
       qDebug() << "PMi не конвертится";
-  MVPMi=MVPM.inverted(&inverted);
+  currentLevel->MVPMi=currentLevel->MVPM.inverted(&inverted);
   if (!inverted)
       qDebug() << "MVPMi не конвертится";
 
@@ -255,7 +263,7 @@ void Scene::paintDM()
   // инициализируем данные программы матрицы и атрибуты
   m_triangle->init();
   // зaпихиваем в его программу матрицу ориентации
-  m_triangle->m_program.setUniformValue(m_triangle->m_matrixUniform, MVPM);
+  m_triangle->m_program.setUniformValue(m_triangle->m_matrixUniform, currentLevel->MVPM);
   // вызываем функцию рисования объекта (или объектов в for)
   m_triangle->draw();
   // проводим сброс инициализации параметров
@@ -263,17 +271,15 @@ void Scene::paintDM()
 
   //РИСУЕМ СФЕРЫ
   m_shphere->init();
-  m_shphere->m_program->setUniformValue(m_shphere->m_matrixUniform, MVPM);
-  m_shphere->m_program->setUniformValue("PM", PM);                          // TODO вынести в класс шфер
-  //m_shphere->m_program->setUniformValue("near", near_);                          // TODO вынести в класс шфер
-  //m_shphere->m_program->setUniformValue("far", far_);                          // TODO вынести в класс шфер
-  m_shphere->m_program->setUniformValue("range", range);                          // TODO вынести в класс шфер
-  m_shphere->m_program->setUniformValue("PMi", PMi);                          // TODO вынести в класс шфер
+  m_shphere->m_program->setUniformValue(m_shphere->m_matrixUniform, currentLevel->MVPM);
+  m_shphere->m_program->setUniformValue("PM", currentLevel->PM);                          // TODO вынести в класс шфер
+  m_shphere->m_program->setUniformValue("range", currentLevel->range);                          // TODO вынести в класс шфер
+  m_shphere->m_program->setUniformValue("PMi", currentLevel->PMi);                          // TODO вынести в класс шфер
     //m_shphere->m_program->setUniformValue("VPInverse", VPInverse);                          // TODO вынести в класс шфер
     //m_shphere->m_program->setUniformValue("VInverse", VInverse);                          // TODO вынести в класс шфер
-  m_shphere->m_program->setUniformValue("MVM", MVM);
-  m_shphere->m_program->setUniformValue("MVPMi", MVPMi);
-  m_shphere->m_program->setUniformValue("viewport",viewport);
+  m_shphere->m_program->setUniformValue("MVM", currentLevel->MVM);
+  m_shphere->m_program->setUniformValue("MVPMi", currentLevel->MVPMi);
+  m_shphere->m_program->setUniformValue("viewport",currentLevel->viewport);
   m_shphere->draw();
   m_shphere->drop();//*/
 
@@ -281,135 +287,17 @@ void Scene::paintDM()
   //m_text->font=QFont::Bold;
   //m_text->pen=
   m_text->set();
-  m_text->drawO(MVPM,"Точка 1",QVector3D(m_triangle->m_vertices[0],m_triangle->m_vertices[1],m_triangle->m_vertices[2]));
-  m_text->drawO(MVPM,"Точка 2",QVector3D(m_triangle->m_vertices[3],m_triangle->m_vertices[4],m_triangle->m_vertices[5]));
-  m_text->drawO(MVPM,"Точка 3",QVector3D(m_triangle->m_vertices[6],m_triangle->m_vertices[7],m_triangle->m_vertices[8]));
+  m_text->drawO(currentLevel->MVPM,"Точка 1",QVector3D(m_triangle->m_vertices[0],m_triangle->m_vertices[1],m_triangle->m_vertices[2]));
+  m_text->drawO(currentLevel->MVPM,"Точка 2",QVector3D(m_triangle->m_vertices[3],m_triangle->m_vertices[4],m_triangle->m_vertices[5]));
+  m_text->drawO(currentLevel->MVPM,"Точка 3",QVector3D(m_triangle->m_vertices[6],m_triangle->m_vertices[7],m_triangle->m_vertices[8]));
   m_text->reset();
 }
 
-void Scene::paintKarta()
-{
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    PM.setToIdentity();
-    PM.perspective(cameraFocusAngle,ratio,near_,far_);  // glFrustum( xmin, xmax, ymin, ymax, near, far)  // gluPerspective(fovy, aspect, near, far)
-    //MVM.rotate(angle_z,0.0f,1.0f,0.0f);  // поворот вокруг оси центра координат
-    //MVM=CameraView; //*MVM;  // получаем матрицу трансформации итогового вида
-    MVPM=PM*MVM;
-
-    // находим проекционную инверсную мтрицу
-    bool inverted;
-    PMi=PM.inverted(&inverted);
-    if (!inverted)
-        qDebug() << "PMi не конвертится";
-    MVPMi=MVPM.inverted(&inverted);
-    if (!inverted)
-        qDebug() << "MVPMi не конвертится";
-
-
-    if (mbuilder->currentmap==FLAT_MAP) paintFlatMap();
-}
-
-void Scene::paintFlatMap()
-{
-  //проверяем, готовы ли данные, если да, то копируем для отображения
-  if (mbuilder->newmapbuild)  { /// TODO Перевести в сигнал  (и в модуль карты)
-      mbuilder->m_mutex.lock();
-      karta->vertices.assign(mbuilder->vertices.begin(),mbuilder->vertices.end()); // copy vertices
-      karta->captions=mbuilder->captions; // copy captions
-      karta->m_colors.resize(mbuilder->vertices.size());   //
-      for (uint i=0;i<karta->m_colors.size();i+=3) {
-          karta->m_colors[i]=1.0f;
-          karta->m_colors[i+1]=0.0f;
-          karta->m_colors[i+2]=0.0f;
-      }
-      mbuilder->newmapbuild=false; // забрали карту, готовьте новую
-      mbuilder->m_mutex.unlock();
-
-      // готовим данные для выборки объектов (TODO убрать ограничение в 255 объектов)
-      karta->IDv.resize(karta->captions.size()*4);
-      float index=0.001f;                    // index должен соответствовать функции setSelected()
-      for (int i=0;i<karta->captions.size();i++) {
-          karta->IDv[i*4]=karta->IDm; // ID model
-          karta->IDv[i*4+1]=i*index; //((float)i/(float)karta->captions.size());    // ID point ДЕЛЁННОЕ НА КОЛИЧЕСТВО ФРАГМЕНТОВ
-          karta->IDv[i*4+2]=0;    // reserv
-          karta->IDv[i*4+3]=1.0f;  //
-      }
-    }
-
-  //karta->draw();
-
-  // РИСУЕМ ЛИНИИ
-  //подключаем программу и проверяем
-  if (!karta->program.bind()){
-      qWarning("KARTA. Line. Шейдеры не сбиндились");
-      return;
-  }
-  // устанавливаем место хранения координат
-    karta->program.setAttributeArray(karta->m_vertexAttr, karta->vertices.data(), 3);
-    // активируем массивы
-    karta->program.enableAttributeArray(karta->m_vertexAttr);
-    // зaпихиваем в программу матрицу ориентации
-    karta->program.setUniformValue(karta->m_MVPmatrix, MVPM);
-    // устанавливаем цвет линий
-    //karta->program.setUniformValue("colormode", true);    // рисуем одним цветом, не массивом
-    karta->program.setUniformValue("statcolor", QVector4D(0.0f,1.0f,0.0f,1.0f));  //
-    // рисуем линии
-    glDrawArrays(GL_LINES,0,karta->vertices.size()/3);
-    // деактивируем массивы
-    karta->program.disableAttributeArray(karta->m_vertexAttr);
-    // очищаем программу
-    karta->program.release();
-
-      //РИСУЕМ СФЕРЫ
-      m_shphere->setPerspective();   // устанавливаем режим рисования сфер в перспективной проекции
-      m_shphere->init();             // bind program
-      m_shphere->m_program->setUniformValue(m_shphere->m_matrixUniform, MVPM);
-      m_shphere->m_program->setUniformValue("PM", PM);                          // TODO вынести в класс шфер
-      m_shphere->m_program->setUniformValue("PMi", PMi);                          // TODO вынести в класс шфер
-      m_shphere->m_program->setUniformValue("MVM", MVM);
-      m_shphere->m_program->setUniformValue("MVPMi", MVPMi);
-      m_shphere->m_program->setUniformValue("viewport",viewport);
-      //m_shphere->m_program->setUniformValue("near", near_);                          // TODO вынести в класс шфер
-      //m_shphere->m_program->setUniformValue("far", far_);                          // TODO вынести в класс шфер
-      m_shphere->m_program->setUniformValue("range", range);                          // TODO вынести в класс шфер
-
-      //shpheres->draw();
-      m_shphere->m_program->setAttributeArray(m_shphere->m_vertexAttr, karta->vertices.data(), 3);
-      m_shphere->m_program->setAttributeArray(m_shphere->m_colorAttr, karta->m_colors.data(), 3);
-      m_shphere->m_program->setUniformValue("R",m_shphere->radius);
-      m_shphere->m_program->setUniformValue("maxpointsize",m_shphere->maxpointsize);
-      // активируем массивы
-      m_shphere->m_program->enableAttributeArray(m_shphere->m_vertexAttr);
-      m_shphere->m_program->enableAttributeArray(m_shphere->m_colorAttr);
-      // активируем выборку объектов
-      m_shphere->m_program->setAttributeArray("selectID", karta->IDv.data(), 4);
-      m_shphere->m_program->enableAttributeArray("selectID");
-      m_shphere->m_program->setUniformValue("selectmode", selectmode);    // указываем режим выборки
-      // рисуем точки
-      glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);   // говорим что будут меняться размеры точек в шейдере
-      glDrawArrays(GL_POINTS,0,karta->vertices.size()/3);
-      glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
-      // производим проверку выборки объектов
-      m_shphere->m_program->disableAttributeArray("selectID");
-      // деактивируем массивы
-      m_shphere->m_program->disableAttributeArray(m_shphere->m_vertexAttr);
-      m_shphere->m_program->disableAttributeArray(m_shphere->m_colorAttr);
-      m_shphere->drop();    // release program
-
-      //РИСУЕМ ТЕКСТ
-      //m_text->font=QFont::Bold;
-      //m_text->pen=
-      m_text->set();
-      for (int i=0;i<karta->captions.size();i++) {
-          m_text->drawO(MVPM,karta->captions[i],QVector3D(karta->vertices[i*3],karta->vertices[(i*3)+1],karta->vertices[(i*3)+2]));
-      }
-      m_text->reset();
-}
-
 void Scene::resizeGL(int w, int h){
-    ratio = (1.0*w)/(!h?1:h);   // !h?1:h - защита от деления на 0
+  /// TODO меняем на всех уровнях
+    currentLevel->ratio = (1.0*w)/(!h?1:h);   // !h?1:h - защита от деления на 0
     glViewport(0,0,w,h);
-    viewport.setX(0); viewport.setY(0); viewport.setZ((float)w); viewport.setW((float)h);
+    currentLevel->viewport.setX(0); currentLevel->viewport.setY(0); currentLevel->viewport.setZ((float)w); currentLevel->viewport.setW((float)h);
 }
 
 void Scene::setStates()
@@ -472,82 +360,72 @@ void Scene::setPaintMode(int mode)
 
 void Scene::buildNewMap()
 {
-    mbuilder->newmap(true);   //false - добавка к существующей, true - построение новой с нуля
+    karta->mbuilder->newmap(true);   //false - добавка к существующей, true - построение новой с нуля
 }
 
 void Scene::addMap()
 {
-    mbuilder->newmap(false);   //false - добавка к существующей, true - построение новой с нуля
+    karta->mbuilder->newmap(false);   //false - добавка к существующей, true - построение новой с нуля
 }
 
 void Scene::keyPressEvent(QKeyEvent *event)
 {
   if (event->modifiers() & Qt::ShiftModifier) {
-      camera.strato=true;  // режим парящей камеры
+      currentLevel->camera.strato=true;  // режим парящей камеры
       emit setBar(QString("strated=true"));
     }
   else {
-      camera.strato=false;
+      currentLevel->camera.strato=false;
       emit setBar(QString("strated=false"));
     }
   switch (event->key()) {
     case Qt::Key_Up:
-      camera.moveFB(step);
+      currentLevel->camera.moveFB(step);
       break;
     case Qt::Key_Down:
-      camera.moveFB(-step);
+      currentLevel->camera.moveFB(-step);
       break;
     case Qt::Key_Left:
-      camera.moveLR(-step);
+      currentLevel->camera.moveLR(-step);
       break;
     case Qt::Key_Right:
-      camera.moveLR(step);
+      currentLevel->camera.moveLR(step);
       break;
   case Qt::Key_W:
-      --angle_x;
-      if (angle_x<0) angle_x=359;
-      //camera.moveUD(+step);
-      camera.Rotate_PositionX(+1.0f); // поворот по оси х
+      currentLevel->camera.Rotate_PositionX(+1.0f); // поворот по оси х
     break;
   case Qt::Key_S:
-      ++angle_x;
-      if (angle_x>=360) angle_x=0;
-      //camera.moveUD(-step);
-      camera.Rotate_PositionX(-1.0f); // поворот по оси х
+      currentLevel->camera.Rotate_PositionX(-1.0f); // поворот по оси х
     break;
   case Qt::Key_A:
-      --angle_y;
-      if (angle_y<0) angle_y=359;
-      camera.Rotate_PositionY(-1.0f); // поворот по оси y
+      currentLevel->camera.Rotate_PositionY(-1.0f); // поворот по оси y
     break;
   case Qt::Key_D:
-      ++angle_y;
-      if (angle_y>=360) angle_y=0;
-      camera.Rotate_PositionY(+1.0f); // поворот по оси y
+      currentLevel->camera.Rotate_PositionY(+1.0f); // поворот по оси y
     break;
   case Qt::Key_Q:
         --angle_z;
         if (angle_z<0) angle_z=359;
         //camera.turnOZ(-1.0f);
-        camera.twirl(-1.0f);
+        currentLevel->camera.twirl(-1.0f);
     break;
   case Qt::Key_E:
         ++angle_z;
         if (angle_z>=360) angle_z=0;
         //camera.turnOZ(+1.0f);
-        camera.twirl(+1.0f);
+        currentLevel->camera.twirl(+1.0f);
     break;
     case Qt::Key_T:
-        camera.turnUD(+1.0f);
+        currentLevel->camera.turnUD(+1.0f);
       break;
     case Qt::Key_G:
-        camera.turnUD(-1.0f);
+        currentLevel->camera.turnUD(-1.0f);
       break;
     case Qt::Key_F:
-        camera.turnLR(+1.0f);
+        currentLevel->camera.turnLR(+1.0f);
       break;
     case Qt::Key_H:
-        camera.turnLR(-1.0f);
+        currentLevel->camera.turnLR(-1.0f);
       break;
     case Qt::Key_M:
         m_shphere->radius=m_shphere->radius+0.001;
@@ -566,20 +444,20 @@ void Scene::keyPressEvent(QKeyEvent *event)
         }
       break;
   case Qt::Key_I: // уменьшаем угол перспективы камеры min=10 // TODO ещё по идее надо отодвигать камеру, чтобы пирамида охватывала сцену
-      if (cameraFocusAngle>10) --cameraFocusAngle;
+      if (currentLevel->cameraFocusAngle>10) --currentLevel->cameraFocusAngle;
     break;
   case Qt::Key_O: // увеличиваем угол перспективы камеры max=120 // TODO приближать камеру
-      if (cameraFocusAngle<120) ++cameraFocusAngle;
+      if (currentLevel->cameraFocusAngle<120) ++currentLevel->cameraFocusAngle;
     break;
   case Qt::Key_R:
-      reset();
+      currentLevel->reset();
     break;
     default:
       break;
     }
-  setCamera();
+  currentLevel->setCamera();
   setFigureInfo();
-  update();
+  update();   // перерисовка экрана
 }
 
 // ArcBall Rotation
@@ -602,7 +480,7 @@ void Scene::mouseDoubleClickEvent(QMouseEvent *event)
 void Scene::mousePressEvent(QMouseEvent *event)
 {
     if (event->buttons() & Qt::LeftButton) {
-       camera.push(pixelPosToViewPos(event->localPos()));
+       currentLevel->camera.push(pixelPosToViewPos(event->localPos()));
        preSelectMode=true;  // ждём возможно выборку, а не перемещение
     }
 }
@@ -622,8 +500,8 @@ void Scene::mouseMoveEvent(QMouseEvent *event)
 {
   if (event->buttons() & Qt::LeftButton) {
       preSelectMode=false;  // выборки не будет, - перемещение
-     camera.moveByMouse(pixelPosToViewPos(event->localPos()));
-     setCamera();
+     currentLevel->camera.moveByMouse(pixelPosToViewPos(event->localPos()));
+     currentLevel->setCamera();
   }
 }
 
@@ -646,23 +524,8 @@ void Scene::wheelEvent(QWheelEvent *event)
 // мы будем считать в еденицах (некоторые драйвера мыши дают точность больше, т.е. меньше 120 за такт)
 // move to new position by step 120/10000 пока только по оси Z (-delta - значит крутим на себя)
 //camera.moveFB((float)event->angleDelta().y()/10000);
-    camera.distanceUD((float)event->angleDelta().y()/10000);
-    setCamera();
-}
-
-void Scene::setCamera() {
-    camera.apply();
-    MVM=camera.CameraView;
-    setCameraInfo();
-}
-
-void Scene::setCameraInfo()
-{
-    QString text="I,O - изменение проекции. Угол проекции="+QString().setNum(cameraFocusAngle);
-    text=text+" cameraEye="+QString().setNum(camera.pos[0])+", "+QString().setNum(camera.pos[1])+", "+QString().setNum(camera.pos[2])
-            +", cameraCenter="+QString().setNum(camera.posView[0])+", "+QString().setNum(camera.posView[1])+", "+QString().setNum(camera.posView[2])
-            +" cameraUp="+QString().setNum(camera.camUp[0])+", "+QString().setNum(camera.camUp[1])+", "+QString().setNum(camera.camUp[2]);
-    emit setPerspectiveInfo(text);
+    currentLevel->camera.distanceUD((float)event->angleDelta().y()/10000);
+    currentLevel->setCamera();
 }
 
 void Scene::setFigureInfo()

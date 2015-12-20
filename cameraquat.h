@@ -88,11 +88,7 @@ public:
     }
 
     void twirl(float fi){                                   // поворот от первого лица вокруг направления взгляда
-      if (grounded) {
-          ;
-      } else {
-          q=QQuaternion::fromAxisAndAngle(pView,fi)*q;
-      }
+      q=QQuaternion::fromAxisAndAngle(pView,fi)*q;
     }
 
     void turnOX(float fi){  // поворот строго по осям системы координат (без учёта поворота самой системы координат)

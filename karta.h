@@ -1,7 +1,6 @@
 #ifndef KARTA_H
 #define KARTA_H
 
-#include "scene.h"
 #include "level.h"
 
 #include "mapbuilder.h"
@@ -21,31 +20,43 @@ public:
   Karta();
   ~Karta();
 
+  // ДВИЖОК РИСОВАНИЯ КАРТЫ
+  MapBuilder *mbuilder;   // класс картостроителя
+  void kartaInit();
+  QOpenGLShaderProgram program;   // шейдерная программа рисования линий
+  QVector<QOpenGLShaderProgram *> programs;
+  // создаём идентификаторы для обращения к шейдерным переменным
+  int m_vertexAttr;
+  int m_colorAttr;
+  int m_matrixUniform;
+  int m_texAttr;
+  int m_texUniform;
+  int m_MVPmatrix;
   void set();
-  void draw(); // рисуем карту
+  void draw(int draw_law); // рисование в режиме построения карты (InterNet-Router-SubNet-LAN-Node)
   void reset();
+  void paintSphereMap(); // рисование сферической карты
+  void paintFlatMap(int draw_law); // рисование плоской карты
 
   // model part
   QVector<void *> primitives;
 
-  std::vector<float> vertices; // создаём вектор (контейнер хранения) координат вершин
-  std::vector<float> m_colors; // создаём вектор (контейнер хранения) координат цветов
-  std::vector<float> texCoord; // координаты текстуры
-  QVector<QString> captions; // список названий
-  float IDm;    // идентификатор модели
-  std::vector<GLfloat> IDv; // создаём вектор (контейнер хранения) идентификаторов вершин (номер модели, индекс вершины, 0, признак выборки)
-
-  QOpenGLShaderProgram program; // шейдер рисования линий
-  int m_vertexAttr;
-  int m_colorAttr;
-  int m_texAttr;
-  int m_texUniform;
-  int m_MVPmatrix;
+  // primitives part
+  shphere *m_shphere;
+  Text *m_text;
+  struct simple_map {
+    std::vector<float> vertices; // создаём вектор (контейнер хранения) координат вершин
+    std::vector<float> m_colors; // создаём вектор (контейнер хранения) координат цветов
+    QVector<QString> captions; // список названий
+    float IDm;    // идентификатор модели
+    std::vector<GLfloat> IDv; // создаём вектор (контейнер хранения) идентификаторов вершин (номер модели, индекс вершины, 0, признак выборки)
+  } smap;
 
   shphere *shpheres;
   Text *texts;
 
-  void paintFlatMap();
+  Level *level;
+
 };
 
 #endif // KARTA_H
