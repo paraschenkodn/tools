@@ -103,6 +103,9 @@ void Scene::initializeGL() {
 
     // levels (load and initialize)
     currentLevel = new Level();
+    /// отображение информации со сцены
+    connect(currentLevel,SIGNAL(setCameraInfo(QString)),this,SIGNAL(setCameraInfo(QString)));
+    // заносим уровень в список
     { int size; size=levels.size(); levels.resize(size+1); levels[size]=currentLevel;}
     karta->level=currentLevel;
 

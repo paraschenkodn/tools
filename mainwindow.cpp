@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent) :
   connect(ui->action,SIGNAL(toggled(bool)),this,SLOT(toPaintModeDM()));         // установка режима рисования
   connect(ui->action_2,SIGNAL(toggled(bool)),this,SLOT(toPaintModeKarta()));    // установка режима рисования
   connect(this,SIGNAL(setPaintMode(int)),ui->SceneWidget,SLOT(setPaintMode(int)));  // установка режима рисования в сцену
-  //connect(ui->SceneWidget->currentLevel,SIGNAL(setCameraInfo(QString)),ui->label,SLOT(setText(QString)));    // отображение информации со сцены
+  connect(ui->SceneWidget,SIGNAL(setCameraInfo(QString)),ui->label,SLOT(setText(QString)));    // отображение информации со сцены
   connect(ui->SceneWidget,SIGNAL(setFiguresInfo(QString)),ui->label_2,SLOT(setText(QString)));      // отображение информации со сцены
   connect(ui->SceneWidget,SIGNAL(setFiguresInfo2(QString)),ui->label_4,SLOT(setText(QString)));     // отображение информации со сцены
   connect(ui->SceneWidget,SIGNAL(setBar(QString)),ui->statusBar,SLOT(showMessage(QString)));     // отображение индикаторов состояния
@@ -43,7 +43,11 @@ void MainWindow::loadPlugins()    // подгружаем модули
       QPluginLoader loader(dir.absoluteFilePath(fileName));
 
       QObject *plugin = loader.instance();
-      if (nullptr == plugin) continue;
+
+      if (nullptr == plugin) {
+          qDebug() << "Load plugins:" << loader.errorString();
+          continue;
+        }
 
       BuilderMapInterface *pI = qobject_cast<BuilderMapInterface*>(plugin); // проверяем на совпадение с нашим интерфейсом
       if (nullptr == pI) continue;

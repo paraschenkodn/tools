@@ -10,7 +10,6 @@ public:
 
   virtual QStringList plushki() const = 0;  // список реализуемых плюшек (можно напихать в менюшек)
 
-  //virtual void newbmap(QString ID, double idNode, std::vector<float> *vertices, std::vector<float> *captions); // это первая плюшка :)
   virtual void newbmap(QString ID, double idNode) = 0; // это первая плюшка :)
   std::vector<float> *vertices;
   QVector<QString> *captions;

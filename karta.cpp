@@ -186,5 +186,5 @@ void Karta::buildMapFromPlugin()  // работа с интерфейсом пл
           smap.IDv[i*4+2]=0;    // reserv
           smap.IDv[i*4+3]=1.0f;  //
       }
-  }
+  }//*/
 }

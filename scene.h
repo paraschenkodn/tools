@@ -114,6 +114,7 @@ signals:
   void setFiguresInfo(const QString &);
   void setFiguresInfo2(const QString &);
   void setBar(const QString &);
+  void setCameraInfo(const QString &);
 };
 
 #endif // SCENE_H
