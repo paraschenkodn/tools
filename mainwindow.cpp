@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "scene.h"
+#include <QPluginLoader>
 
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
@@ -10,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent) :
   connect(ui->action,SIGNAL(toggled(bool)),this,SLOT(toPaintModeDM()));         // установка режима рисования
   connect(ui->action_2,SIGNAL(toggled(bool)),this,SLOT(toPaintModeKarta()));    // установка режима рисования
   connect(this,SIGNAL(setPaintMode(int)),ui->SceneWidget,SLOT(setPaintMode(int)));  // установка режима рисования в сцену
-  connect(ui->SceneWidget->currentLevel,SIGNAL(setCameraInfo(QString)),ui->label,SLOT(setText(QString)));    // отображение информации со сцены
+  //connect(ui->SceneWidget->currentLevel,SIGNAL(setCameraInfo(QString)),ui->label,SLOT(setText(QString)));    // отображение информации со сцены
   connect(ui->SceneWidget,SIGNAL(setFiguresInfo(QString)),ui->label_2,SLOT(setText(QString)));      // отображение информации со сцены
   connect(ui->SceneWidget,SIGNAL(setFiguresInfo2(QString)),ui->label_4,SLOT(setText(QString)));     // отображение информации со сцены
   connect(ui->SceneWidget,SIGNAL(setBar(QString)),ui->statusBar,SLOT(showMessage(QString)));     // отображение индикаторов состояния
@@ -30,6 +31,33 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
   delete ui;
+}
+
+void MainWindow::loadPlugins()    // подгружаем модули
+{
+  QDir dir(QApplication::applicationDirPath());
+
+    if (false == dir.cd("../../plugins")) return;
+
+    foreach (QString fileName, dir.entryList(QDir::Files)) {
+      QPluginLoader loader(dir.absoluteFilePath(fileName));
+
+      QObject *plugin = loader.instance();
+      if (nullptr == plugin) continue;
+
+      BuilderMapInterface *pI = qobject_cast<BuilderMapInterface*>(plugin); // проверяем на совпадение с нашим интерфейсом
+      if (nullptr == pI) continue;
+
+      QStringList lstOperations = pI->plushki();      // получаем списком какие у нас плюшки, затем запихиваем их в менюшки
+      foreach (QString str, lstOperations) {
+          QAction* pact = new QAction(str, plugin);
+          connect(pact, SIGNAL(triggered()),
+                  ui->SceneWidget->karta, SLOT(buildMapFromPlugin())
+                 );
+
+          ui->menuKarta->addAction(pact);
+      }
+    }
 }
 
 void MainWindow::toPaintModeDM()    // установка режима рисования

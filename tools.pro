@@ -7,6 +7,7 @@
 QT       += core gui opengl
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+CONFIG += c++11
 
 TARGET = tools
 TEMPLATE = app
@@ -21,7 +22,6 @@ SOURCES += main.cpp\
     text.cpp \
     mapbuilder.cpp \
     karta.cpp \
-    test.cpp \
     cameraquat.cpp \
     level.cpp
 
@@ -33,9 +33,9 @@ HEADERS  += mainwindow.h \
     text.h \
     mapbuilder.h \
     karta.h \
-    test.h \
     cameraquat.h \
-    level.h
+    level.h \
+    plugininterface.h
 
 FORMS    += mainwindow.ui
 

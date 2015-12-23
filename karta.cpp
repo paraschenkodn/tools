@@ -68,16 +68,16 @@ void Karta::paintFlatMap(int draw_law)
       mbuilder->newmapbuild=false; // забрали карту, готовьте новую
       mbuilder->m_mutex.unlock();
 
-      // готовим данные для выборки объектов (TODO убрать ограничение в 255 объектов)
+      // готовим данные для выборки объектов
       smap.IDv.resize(smap.captions.size()*4);
-      float index=0.001f;                    // index должен соответствовать функции setSelected()
+      float index=0.001f;                    // index должен соответствовать коэфициенту в функции setSelected()
       for (int i=0;i<smap.captions.size();i++) {
           smap.IDv[i*4]=smap.IDm; // ID model
           smap.IDv[i*4+1]=i*index; //((float)i/(float)karta->captions.size());    // ID point ДЕЛЁННОЕ НА КОЛИЧЕСТВО ФРАГМЕНТОВ
           smap.IDv[i*4+2]=0;    // reserv
           smap.IDv[i*4+3]=1.0f;  //
       }
-    }
+  }
 
   // РИСУЕМ ЛИНИИ
   if (draw_law==DRAW_NORM) {
@@ -148,5 +148,43 @@ void Karta::paintFlatMap(int draw_law)
           m_text->drawO(level->MVPM,smap.captions[i],QVector3D(smap.vertices[i*3],smap.vertices[(i*3)+1],smap.vertices[(i*3)+2]));
       }
       m_text->reset();
+    }
+}
+
+void Karta::buildMapFromPlugin()  // работа с интерфейсом плагина
+{
+  //mbuilder->newmapbuild=false;    // организовываем построение карты
+  QAction* pact = qobject_cast<QAction*>(sender());
+  BuilderMapInterface* pI = qobject_cast<BuilderMapInterface*>(pact->parent());
+  double ID=0;
+  /// построение карты из файла, начиная с нода==ID, передаём в плагин название операции и параметры
+  /// плагин должен вернуть:
+  /// 1. указатель на массив вершин
+  /// 2. указатель на массив идентификаторов вершин (например названия)
+  //pI->newbmap(pact->text(),ID,&smap.vertices,&smap.captions);
+  pI->newbmap(pact->text(),ID);
+  // переписываем данные для отображения
+  if (/*mbuilder->newmapbuild*/1)  {
+      //mbuilder->m_mutex.lock();
+      smap.vertices.assign(pI->vertices->begin(),pI->vertices->end()); // copy vertices
+      smap.captions=*pI->captions; // copy captions
+      smap.m_colors.resize(pI->vertices->size());   //
+      for (uint i=0;i<smap.m_colors.size();i+=3) {
+          smap.m_colors[i]=1.0f;
+          smap.m_colors[i+1]=0.0f;
+          smap.m_colors[i+2]=0.0f;
+      }
+      //mbuilder->newmapbuild=false; // забрали карту, готовьте новую
+      //mbuilder->m_mutex.unlock();
+
+      // готовим данные для выборки объектов
+      smap.IDv.resize(smap.captions.size()*4);
+      float index=0.001f;                    // index должен соответствовать коэфициенту в функции setSelected()
+      for (int i=0;i<smap.captions.size();i++) {
+          smap.IDv[i*4]=smap.IDm; // ID model
+          smap.IDv[i*4+1]=i*index; //((float)i/(float)karta->captions.size());    // ID point ДЕЛЁННОЕ НА КОЛИЧЕСТВО ФРАГМЕНТОВ
+          smap.IDv[i*4+2]=0;    // reserv
+          smap.IDv[i*4+3]=1.0f;  //
+      }
   }
 }

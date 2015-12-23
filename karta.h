@@ -14,8 +14,9 @@
 #include <QOpenGLShaderProgram>  // объявляем для передачи шейдерных программ в объект
 
 
-class Karta
+class Karta : public QObject
 {
+  Q_OBJECT // для связывания сигналов и слотов, : public QObject тоже для этого
 public:
   Karta();
   ~Karta();
@@ -56,7 +57,9 @@ public:
   Text *texts;
 
   Level *level;
-
+public slots:
+  /// интерфейс получения данных от плагина-картостроителя (id "BuilderMapInterface")
+  void buildMapFromPlugin();
 };
 
 #endif // KARTA_H

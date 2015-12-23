@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QActionGroup>
+#include "plugininterface.h"
 
 namespace Ui {
   class MainWindow;
@@ -16,6 +17,7 @@ public:
   explicit MainWindow(QWidget *parent = 0);
   ~MainWindow();
 
+  void loadPlugins();
 private:
   Ui::MainWindow *ui;
   QActionGroup *AG;
