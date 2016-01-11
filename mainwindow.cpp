@@ -56,7 +56,7 @@ void MainWindow::loadPlugins()    // подгружаем модули
       foreach (QString str, lstOperations) {
           QAction* pact = new QAction(str, plugin);
           connect(pact, SIGNAL(triggered()),
-                  ui->SceneWidget->karta, SLOT(buildMapFromPlugin())
+                  ui->SceneWidget, SLOT(buildMapFromPlugin())
                  );
 
           ui->menuKarta->addAction(pact);

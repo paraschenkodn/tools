@@ -4,6 +4,7 @@
 #include "level.h"
 
 #include "mapbuilder.h"
+#include "plugininterface.h"
 
 /// примитивы
 #include "shphere.h"
@@ -12,7 +13,9 @@
 
 #include <QOpenGLTexture>
 #include <QOpenGLShaderProgram>  // объявляем для передачи шейдерных программ в объект
+#include <QAction>
 
+#define QUANTIZEROFSELECTION 0.001f
 
 class Karta : public QObject
 {
@@ -57,9 +60,15 @@ public:
   Text *texts;
 
   Level *level;
+  /// данные текущего плагина
+  /// TODO оформить каждый плагин как уровень, если плагин предоставляет свои данные
+  bool plugin_data; // int dataMap=DATA_PLUGIN; //DATA_SELF // источник данных
+  QAction* pact; // текущий выбранный идентификатор плагина в меню
+  BuilderMapInterface* pI; // текущий интерфейс для текущего выбранного плагина
+  void mapFromPlugin(int idV); // общая функция для функции слота и функции выбора
 public slots:
   /// интерфейс получения данных от плагина-картостроителя (id "BuilderMapInterface")
-  void buildMapFromPlugin();
+  void buildFromPlugin(QAction *act);
 };
 
 #endif // KARTA_H

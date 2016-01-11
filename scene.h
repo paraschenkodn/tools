@@ -109,12 +109,15 @@ public slots:
 private slots:
   // заставляем прорисовываться по таймеру
   void slotAnimation();
+  void buildMapFromPlugin();  // перевалочный слот от менюшки плагинов
 
 signals:
   void setFiguresInfo(const QString &);
   void setFiguresInfo2(const QString &);
   void setBar(const QString &);
   void setCameraInfo(const QString &);
+
+  void buildFromPlugin(QAction*);  // перевалочный сигнал от менюшки плагинов
 };
 
 #endif // SCENE_H

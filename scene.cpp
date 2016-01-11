@@ -1,9 +1,11 @@
 #include "scene.h"
 
 #include <QMatrix4x4>
+#include <QAction>
 
 Scene::Scene(QWidget *parent) :
     QOpenGLWidget (parent),
+    karta(nullptr),
     step(0.005f), // шаг сдвига фигур
     perspective(true),
     paintMode(TEST_MODE)
@@ -94,6 +96,8 @@ void Scene::initializeGL() {
     // karta
     karta = new Karta();
     karta->smap.IDm = 0.5f; //((float)1 / (float)255)*128; // устанавливаем ID модели
+    /// подключаем интерфейс получения данных от плагина-картостроителя (id "BuilderMapInterface")
+    connect(this,SIGNAL(buildFromPlugin(QAction*)),karta,SLOT(buildFromPlugin(QAction*)));
 
     // инициализируем свой буфер выбора FBO
     //QOpenGLFramebufferObjectFormat fboFormat;
@@ -187,11 +191,13 @@ void Scene::paintGL(){
 
 void Scene::setSelected(){
   if (!selectID.w()) return;
-    float index=0.001f;                    // index должен соответствовать в функции назначения идентификаторов
-    float fi=selectID.y()/index;
-    int i= (fi<0) ? (int)ceil(fi) : (int)floor(fi);
-    float foi=oldSelectID.y()/index;
-    int oi= (foi<0) ? (int)ceil(foi) : (int)floor(foi);
+    float index=QUANTIZEROFSELECTION;  // index должен соответствовать в функции назначения идентификаторов
+    //float fi=selectID.y()/index;
+    //int i= (fi<0) ? (int)ceil(fi) : (int)floor(fi); ///TODO, это неверное определение индекса, (всегда работает floor) повезло что карта округляет(корректирует) цвет в сторону увеличения (округляет (int))
+    //float foi=oldSelectID.y()/index;
+    //int oi= (foi<0) ? (int)ceil(foi) : (int)floor(foi);
+    int i=round(selectID.y()/index);    //округление к ближайшему целому
+    int oi=round(oldSelectID.y()/index);
     karta->smap.m_colors[oi*3]=1.0f;
     karta->smap.m_colors[oi*3+1]=0.0f;
     karta->smap.m_colors[oi*3+2]=0.0f;
@@ -200,6 +206,10 @@ void Scene::setSelected(){
     karta->smap.m_colors[i*3+2]=1.0f;
     //qDebug() << "index i=" << i << " fi" << fi << "oi" << oi;
     oldSelectID=selectID;
+    /// запускаем стройку новой карты в соответствии с выбором
+    if (karta->plugin_data) {
+        karta->mapFromPlugin(i);
+      }
 }
 
 void Scene::paintKarta(int draw_law) {
@@ -359,6 +369,8 @@ void Scene::setPerspective(int _switch)
 void Scene::setPaintMode(int mode)
 {
     paintMode=mode; // 1- test, 2 - karta
+    if (karta!=nullptr)
+        karta->plugin_data=false; // используется встроенные функции источника данных
 }
 
 void Scene::buildNewMap()
@@ -546,3 +558,10 @@ void Scene::slotAnimation()
   //m_triangle->setx0(m_triangle->m_x0-step);
   update();
 }
+
+void Scene::buildMapFromPlugin()
+{
+  QAction *pact = qobject_cast<QAction*>(sender());
+  emit buildFromPlugin(pact);
+}
+

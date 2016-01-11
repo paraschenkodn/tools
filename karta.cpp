@@ -1,5 +1,5 @@
 #include "karta.h"
-#include "mainwindow.h"
+//#include "mainwindow.h"
 #include "shphere.h"
 #include "text.h"
 
@@ -32,6 +32,8 @@ Karta::Karta()
     // порождаем для карты свои примитивы
     m_shphere=new shphere();
     m_text =new Text();
+
+    plugin_data=false;
 }
 
 Karta::~Karta()
@@ -49,7 +51,7 @@ void Karta::set()
 
 void Karta::draw(int draw_law)
 {
-if (mbuilder->currentmap==FLAT_MAP) paintFlatMap(draw_law);
+if (mbuilder->currentmap==FLAT_MAP || mbuilder->currentmap==FLAT_MAP) paintFlatMap(draw_law);
 }
 
 void Karta::paintFlatMap(int draw_law)
@@ -93,10 +95,10 @@ void Karta::paintFlatMap(int draw_law)
       // зaпихиваем в программу матрицу ориентации
       program.setUniformValue(m_MVPmatrix, level->MVPM);
       // устанавливаем цвет линий
-      //karta->program.setUniformValue("colormode", true);    // рисуем одним цветом, не массивом
-      program.setUniformValue("statcolor", QVector4D(0.0f,1.0f,0.0f,1.0f));  //
+      //karta->program.setUniformValue("colormode", true);
+      program.setUniformValue("statcolor", QVector4D(0.0f,1.0f,0.0f,1.0f));  // рисуем одним цветом, не массивом
       // рисуем линии
-      glDrawArrays(GL_LINES,0,smap.vertices.size()/3);
+      glDrawArrays(GL_LINES,0,smap.vertices.size()/3);  // режим рисования попарно для точек
       // деактивируем массивы
       program.disableAttributeArray(m_vertexAttr);
       // очищаем программу
@@ -151,18 +153,31 @@ void Karta::paintFlatMap(int draw_law)
     }
 }
 
-void Karta::buildMapFromPlugin()  // работа с интерфейсом плагина
+void Karta::buildFromPlugin(QAction *act)  // работа с интерфейсом плагина
 {
   //mbuilder->newmapbuild=false;    // организовываем построение карты
-  QAction* pact = qobject_cast<QAction*>(sender());
-  BuilderMapInterface* pI = qobject_cast<BuilderMapInterface*>(pact->parent());
-  double ID=0;
+  //pact = qobject_cast<QAction*>(sender());
+  pact=act;
+  pI = qobject_cast<BuilderMapInterface*>(pact->parent());
+  mapFromPlugin(-1); ///TODO надо сделать для текущего плагина запоминание idV
+}
+
+void Karta::mapFromPlugin(int idV)  // работа с интерфейсом плагина
+{
+  plugin_data=true;
+  ///TODO надо сделать для текущего плагина запоминание idV
+  if (idV==-1) { // при -1 восстанавливаем запомненную позицию выбора
+      ;
+    }
+  //int ID=0; // показываем что строится с нуля (первая карта по умолчанию всегда строится сама с нуля)
   /// построение карты из файла, начиная с нода==ID, передаём в плагин название операции и параметры
   /// плагин должен вернуть:
   /// 1. указатель на массив вершин
   /// 2. указатель на массив идентификаторов вершин (например названия)
   //pI->newbmap(pact->text(),ID,&smap.vertices,&smap.captions);
-  pI->newbmap(pact->text(),ID);
+
+  pI->newbmap(pact->text(),idV);
+
   // переписываем данные для отображения
   if (/*mbuilder->newmapbuild*/1)  {
       //mbuilder->m_mutex.lock();
@@ -174,17 +189,24 @@ void Karta::buildMapFromPlugin()  // работа с интерфейсом пл
           smap.m_colors[i+1]=0.0f;
           smap.m_colors[i+2]=0.0f;
       }
+      //// заглавный шарик рисуем синим TODO цвет лучше задавать в плагине
+      /// не отрисовывает так, потомучто перекрывается в этой позиции последующим шариком с любым более старшим индексом
+      smap.m_colors[1]=0.0f;
+      smap.m_colors[1+1]=0.0f;
+      smap.m_colors[1+2]=1.0f;
+
       //mbuilder->newmapbuild=false; // забрали карту, готовьте новую
       //mbuilder->m_mutex.unlock();
 
-      // готовим данные для выборки объектов
+      // данные для выборки объектов предоставляет плагин
       smap.IDv.resize(smap.captions.size()*4);
-      float index=0.001f;                    // index должен соответствовать коэфициенту в функции setSelected()
+      float index=QUANTIZEROFSELECTION;                    // index должен соответствовать коэфициенту в функции setSelected()
       for (int i=0;i<smap.captions.size();i++) {
           smap.IDv[i*4]=smap.IDm; // ID model
           smap.IDv[i*4+1]=i*index; //((float)i/(float)karta->captions.size());    // ID point ДЕЛЁННОЕ НА КОЛИЧЕСТВО ФРАГМЕНТОВ
           smap.IDv[i*4+2]=0;    // reserv
           smap.IDv[i*4+3]=1.0f;  //
+          /// СТАВЯТСЯ В СООТВЕТСТВИЕ ИНДЕКСЫ ВЫБОРКИ И ИНДЕКСЫ ВЫБОРА ПЛАГИНА idVPlugin=IDv=iCaptions
       }
   }//*/
 }
