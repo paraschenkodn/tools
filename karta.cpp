@@ -39,7 +39,7 @@ Karta::Karta()
 Karta::~Karta()
 {
 // удаление делается в деструкторе сцены, где уже использован MakeCurrent(), поэтому пропускаем MakeCurrent()
-    delete mbuilder;
+  delete mbuilder;
   delete m_shphere;
   delete m_text;
 }
